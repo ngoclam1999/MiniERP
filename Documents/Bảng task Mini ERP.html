@@ -1,0 +1,212 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Bảng task Mini ERP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Danh sách task theo giai đoạn, trạng thái bằng chip, task bị chặn nhìn thấy ngay */
+:root{
+  --bg:#EDEFF2; --surface:#FFFFFF; --surface-2:#F4F5F8; --line:#DADEE5;
+  --ink:#14181F; --ink-2:#48515E; --ink-3:#778090;
+  --accent:#D9480F; --accent-ink:#FFFFFF; --accent-soft:#FDE8DE;
+  --good:#17804F; --good-soft:#DDF3E8; --warn:#9A6700; --warn-soft:#FFF0C7;
+  --bad:#C62828; --bad-soft:#FBE0DE; --info:#2257C5; --info-soft:#E1EAFB;
+  --font:'Be Vietnam Pro',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0E1116; --surface:#171B22; --surface-2:#1E232C; --line:#2A313C;
+  --ink:#E9ECF1; --ink-2:#A9B1BE; --ink-3:#7B8595;
+  --accent:#FF7A45; --accent-ink:#1A0E08; --accent-soft:#3B2316;
+  --good:#3FCB8A; --good-soft:#12301F; --warn:#F0B84A; --warn-soft:#3A2D0B;
+  --bad:#FF6B63; --bad-soft:#3C1816; --info:#7BA5FF; --info-soft:#14233F; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1116; --surface:#171B22; --surface-2:#1E232C; --line:#2A313C;
+  --ink:#E9ECF1; --ink-2:#A9B1BE; --ink-3:#7B8595;
+  --accent:#FF7A45; --accent-ink:#1A0E08; --accent-soft:#3B2316;
+  --good:#3FCB8A; --good-soft:#12301F; --warn:#F0B84A; --warn-soft:#3A2D0B;
+  --bad:#FF6B63; --bad-soft:#3C1816; --info:#7BA5FF; --info-soft:#14233F; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:13.5px;line-height:1.5;margin:0}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 56px;display:flex;flex-direction:column;gap:16px}
+h1{margin:0;font-size:20px;font-weight:600}
+.sub{color:var(--ink-2);margin:2px 0 0}
+.head{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap}
+.head .grow{flex:1;min-width:240px}
+.mono{font-family:var(--mono);font-size:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;min-width:0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.stat{padding:11px 14px;display:flex;flex-direction:column}
+.stat small{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3)}
+.stat strong{font-size:22px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.stat span{font-size:12px;color:var(--ink-2)}
+.prog{height:6px;border-radius:3px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden}
+.prog i{display:block;height:100%;background:var(--good)}
+.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.inp,.sel{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 9px;min-width:0}
+.inp{flex:1 1 220px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:3px 11px;cursor:pointer;font-size:12.5px;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.btn{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:4px 10px;cursor:pointer;font-weight:500;white-space:nowrap;font-size:12.5px}
+.btn:hover{background:var(--surface-2)}
+.btn.icon{padding:4px 8px}
+.ph-h{display:flex;gap:12px;align-items:center;padding:11px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.ph-h h2{margin:0;font-size:14px;font-weight:600;flex:1;min-width:200px}
+.ph-h .prog{width:140px}
+.ph-h .note{color:var(--ink-3);font-size:12px;font-variant-numeric:tabular-nums}
+.task{display:grid;grid-template-columns:78px minmax(0,1fr) auto;gap:4px 12px;padding:10px 14px;border-bottom:1px solid var(--line);align-items:start}
+.task:last-child{border-bottom:0}
+.task.blocked{background:var(--surface-2)}
+.task.blocked .t{color:var(--ink-2)}
+.id{font-family:var(--mono);font-size:12px;font-weight:600;padding-top:2px}
+.t{font-weight:500;line-height:1.4;cursor:pointer;background:none;border:0;text-align:left;padding:0}
+.meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:5px;align-items:center}
+.tag{display:inline-block;border:1px solid var(--line);border-radius:4px;padding:0 6px;font-size:11.5px;color:var(--ink-2);background:var(--surface-2)}
+.tag.ok{border-color:transparent;background:var(--good-soft);color:var(--good)}
+.tag.no{border-color:transparent;background:var(--bad-soft);color:var(--bad)}
+.tag.sz{font-family:var(--mono);font-size:11px}
+.pill{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:1px 9px;font-size:11.5px;font-weight:500;white-space:nowrap;background:var(--surface-2);color:var(--ink-2)}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.pill.good{background:var(--good-soft);color:var(--good)} .pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)} .pill.info{background:var(--info-soft);color:var(--info)}
+.acts{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.detail{grid-column:2/-1;margin-top:4px;padding:10px 12px;border-radius:6px;background:var(--surface-2);border:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
+.detail b{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);font-weight:600;display:block}
+.empty{padding:26px;text-align:center;color:var(--ink-3)}
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:9px 16px;border-radius:8px;z-index:70;max-width:calc(100% - 32px)}
+
+.acc{grid-column:2/-1;margin-top:4px;border:1px solid var(--line);border-radius:6px;background:var(--surface-2);overflow:hidden}
+.acc-h{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:9px 12px;border-bottom:1px solid var(--line)}
+.acc-h b{font-size:12.5px}
+.score{font-family:var(--mono);font-weight:600;font-size:13px}
+.crit{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;padding:8px 12px;border-bottom:1px solid var(--line);align-items:center}
+.crit .lbl{min-width:0}
+.crit small{color:var(--ink-3)}
+.seg3{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--surface)}
+.seg3 button{border:0;background:none;padding:3px 10px;cursor:pointer;font-size:12.5px;border-right:1px solid var(--line)}
+.seg3 button:last-child{border-right:0}
+.seg3 button[aria-pressed="true"].y{background:var(--good-soft);color:var(--good);font-weight:600}
+.seg3 button[aria-pressed="true"].n{background:var(--bad-soft);color:var(--bad);font-weight:600}
+.seg3 button[aria-pressed="true"].na{background:var(--surface-2);color:var(--ink-2);font-weight:600}
+.acc-f{display:flex;flex-direction:column;gap:8px;padding:10px 12px}
+.txt{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 9px;width:100%;min-height:54px;resize:vertical}
+.gate{font-size:11px;color:var(--bad);font-weight:600;margin-left:6px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.verdict{font-size:12.5px}
+@media (max-width:640px){.task{grid-template-columns:1fr}.detail{grid-column:1}.acts{justify-content:flex-start}.ph-h .prog{width:100%}}
+</style>
+
+<div class="wrap">
+  <div class="head">
+    <div class="grow"><h1>Bảng task Mini ERP</h1><p class="sub">Mỗi task phải qua nghiệm thu: chấm 6 tiêu chí, ra kết quả Đạt hoặc Làm lại. Task có phụ thuộc chưa được nghiệm thu là "Bị chặn". Dữ liệu lưu trong trình duyệt của bạn.</p></div>
+    <button class="btn" id="reset">Đặt lại tất cả</button>
+  </div>
+  <div class="stats" id="stats"></div>
+  <div class="tools">
+    <input class="inp" id="q" placeholder="Tìm theo mã hoặc tên task" aria-label="Tìm task">
+    <div class="chips" id="stf" role="group" aria-label="Lọc theo trạng thái"></div>
+  </div>
+  <div class="chips" id="phf" role="group" aria-label="Lọc theo giai đoạn"></div>
+  <div id="list" style="display:flex;flex-direction:column;gap:14px"></div>
+</div>
+<div id="toast" hidden></div>
+
+<script>
+const D={"tasks": [{"id": "F-01", "ph": "P0", "title": "Dựng dự án Apps Script (clasp), cấu trúc thư mục, Git, CHANGELOG", "deps": [], "size": "S", "spec": "§1.2", "done": "Chạy được `clasp push`; có thư mục src/tests; WebApp trả trang \"Hello\" khi mở URL triển khai", "wave": 1}, {"id": "F-02", "ph": "P0", "title": "Tạo file Google Sheets với toàn bộ tab và hàng tiêu đề theo §3", "deps": ["F-01"], "size": "M", "spec": "§3", "done": "Script `setup_schema()` tạo/chuẩn hoá mọi tab; chạy lại 2 lần không lỗi, không mất dữ liệu", "wave": 2}, {"id": "F-03", "ph": "P0", "title": "Lớp dữ liệu lib_db: readAll, findById, query, insert, update, softDelete, nextId", "deps": ["F-02"], "size": "L", "spec": "§4.2", "done": "Test chèn 1.000 dòng < 10 giây; đổi thứ tự cột vẫn chạy đúng; nextId không trùng", "wave": 3}, {"id": "F-04", "ph": "P0", "title": "withLock, bộ lỗi chuẩn (apiError), router doPost/api(action)", "deps": ["F-03"], "size": "M", "spec": "§1.3, §1.4", "done": "Gọi action không tồn tại trả NOT_FOUND; hai request ghi đồng thời không ghi chồng nhau", "wave": 4}, {"id": "F-05", "ph": "P0", "title": "Xác thực & phân quyền: Users, auth.me, requireRole, requireProjectAccess", "deps": ["F-04"], "size": "M", "spec": "§2, §4.1", "done": "Email ngoài danh sách bị UNAUTHENTICATED; mỗi vai trò chỉ gọi được action trong ma trận §2", "wave": 5}, {"id": "F-06", "ph": "P0", "title": "AuditLog tự động cho mọi thao tác ghi; Notifications cơ bản", "deps": ["F-04"], "size": "S", "spec": "§1.6", "done": "Mỗi insert/update sinh một dòng AuditLog; trường nhạy cảm không bị ghi giá trị", "wave": 5}, {"id": "F-07", "ph": "P0", "title": "Khung SPA: layout, thanh điều hướng theo quyền, hash router, trạng thái tải/lỗi", "deps": ["F-05"], "size": "L", "spec": "§1.8, §4.1", "done": "Giao diện khớp mẫu ở 1440px và 400px; sáng/tối; menu ẩn mục không có quyền", "wave": 6}, {"id": "F-08", "ph": "P0", "title": "Thư viện giao diện dùng chung: bảng, chip trạng thái, tab, modal, toast, form, thanh phân bổ", "deps": ["F-07"], "size": "L", "spec": "§1.8", "done": "Có trang \"style guide\" hiển thị đủ thành phần; không dùng alert/confirm/prompt", "wave": 7}, {"id": "F-09", "ph": "P0", "title": "Client API (google.script.run bọc Promise), xử lý lỗi và toast thống nhất", "deps": ["F-07", "F-04"], "size": "S", "spec": "§1.3", "done": "Lỗi LOCK_TIMEOUT hiện thông báo tiếng Việt và nút thử lại", "wave": 7}, {"id": "F-10", "ph": "P0", "title": "Settings & Counters; trang cấu hình cho admin", "deps": ["F-05", "F-08"], "size": "S", "spec": "§3.1", "done": "Sửa Settings có hiệu lực không cần triển khai lại; chỉ admin truy cập", "wave": 8}, {"id": "D-01", "ph": "P1", "title": "CRUD Khách hàng (API + màn hình)", "deps": ["F-08", "F-09"], "size": "M", "spec": "§3.2", "done": "Tạo/sửa/tìm kiếm; trùng mã số thuế bị cảnh báo", "wave": 8}, {"id": "D-02", "ph": "P1", "title": "CRUD Nhà cung cấp (kèm payment_terms, lead-time TB)", "deps": ["F-08", "F-09"], "size": "M", "spec": "§3.2", "done": "Như D-01; lưu được điều khoản thanh toán chuẩn", "wave": 8}, {"id": "D-03", "ph": "P1", "title": "Danh mục vật tư (Items) + nhập hàng loạt từ Excel + mã vạch", "deps": ["F-08", "F-09"], "size": "L", "spec": "§3.2", "done": "Nhập 500 mã từ file < 30 giây; báo lỗi theo dòng; sku duy nhất", "wave": 8}, {"id": "D-04", "ph": "P1", "title": "Danh mục kho (Warehouses) và khởi tạo 3 loại kho", "deps": ["F-03"], "size": "S", "spec": "§3.2", "done": "Có 3 kho mặc định; không xoá kho còn tồn", "wave": 4}, {"id": "H-01", "ph": "P1", "title": "Hồ sơ nhân viên: danh sách, chi tiết, thêm/sửa (có che dữ liệu nhạy cảm)", "deps": ["F-08", "F-09", "F-05"], "size": "L", "spec": "§8.1", "done": "CCCD hiển thị che với vai trò khác hr/admin; employee.reveal ghi AuditLog", "wave": 8}, {"id": "H-02", "ph": "P1", "title": "Kỹ năng & chứng chỉ nhân viên; trường file đính kèm Drive", "deps": ["H-01"], "size": "M", "spec": "§8.2", "done": "Thêm/sửa kỹ năng, chứng chỉ; tải file lên Drive và lưu link", "wave": 9}, {"id": "B-01", "ph": "P2", "title": "Dự án: API CRUD, sinh mã DA-YYMM-NN, trạng thái", "deps": ["D-01", "F-05"], "size": "M", "spec": "§5.1", "done": "Tạo dự án sinh đúng mã; không xoá được dự án đã phát sinh giao dịch", "wave": 9}, {"id": "B-02", "ph": "P2", "title": "Màn hình Dự án: thẻ chọn dự án + chi tiết các tab + hồ sơ", "deps": ["B-01", "F-08"], "size": "L", "spec": "§5.1", "done": "Khớp mẫu; tiến độ tính từ task", "wave": 10}, {"id": "B-03", "ph": "P2", "title": "Các đợt thanh toán của dự án (mặc định 30/50/20, kiểm tổng 100%)", "deps": ["B-01"], "size": "M", "spec": "§5.1, §5.5", "done": "Sửa tỷ lệ tổng ≠ 100% bị VALIDATION; số tiền đợt tính đúng theo giá trị hợp đồng", "wave": 10}, {"id": "B-04", "ph": "P2", "title": "BOM: thêm/sửa/xoá dòng, tính qty_short, kiểm tra bất biến", "deps": ["B-01", "D-03"], "size": "M", "spec": "§3.3, §5.2", "done": "Không thể lưu BOM làm qty_short < 0", "wave": 10}, {"id": "B-05", "ph": "P2", "title": "Nhập BOM: xem trước → xác nhận (dán Excel/CSV/xlsx), tạo nhanh mã vật tư", "deps": ["B-04"], "size": "L", "spec": "§5.2", "done": "File mẫu 8 dòng báo đúng lỗi và lưu 6 dòng hợp lệ; một bản ghi AuditLog", "wave": 11}, {"id": "B-06", "ph": "P2", "title": "Bảng BOM: thanh phân bổ 4 đoạn, chip trạng thái, bộ lọc", "deps": ["B-04", "F-08"], "size": "M", "spec": "§5.4", "done": "Hiển thị đúng 5 trạng thái ưu tiên; khớp mẫu", "wave": 11}, {"id": "B-07", "ph": "P2", "title": "Giá thành dự án: ghi ProjectCosts + API project.cost + tab Giá thành", "deps": ["B-01", "K-04"], "size": "M", "spec": "§5.6", "done": "Xuất kho/duyệt OT/duyệt công tác đều làm giá thành đổi đúng; huỷ thì trả lại", "wave": 12}, {"id": "K-01", "ph": "P3", "title": "StockBalance, StockMovements, StockReservations: hàm lõi (reserve, release, issue, receive, adjust)", "deps": ["F-03", "D-03", "D-04"], "size": "L", "spec": "§3.4, §7", "done": "Test đơn vị cho từng hàm; on_hand và reserved không bao giờ âm", "wave": 9}, {"id": "K-02", "ph": "P3", "title": "Đối soát BOM với kho: giữ chỗ tự động + sinh PR (idempotent)", "deps": ["K-01", "B-04"], "size": "L", "spec": "§5.3", "done": "Kịch bản 5 PLC / dự án A,B đúng; chạy lại 2 lần không đổi kết quả", "wave": 11}, {"id": "K-03", "ph": "P3", "title": "Màn hình Tồn kho: 3 chỉ số, thẻ giữ chỗ theo dự án, cảnh báo hết/dưới mức, thẻ kho", "deps": ["K-01", "F-08"], "size": "M", "spec": "§7.1", "done": "Khả dụng = thực tế − giữ chỗ; lọc kho/tìm kiếm hoạt động", "wave": 10}, {"id": "K-04", "ph": "P3", "title": "Phiếu xuất kho: chỉ xuất vật tư đã giữ chỗ đúng dự án; trừ tồn; ghi giá thành; huỷ bằng bút toán đảo", "deps": ["K-01", "B-04"], "size": "L", "spec": "§7.2", "done": "Đạt cả ca thành công và ca bị từ chối STOCK_NOT_RESERVED / STOCK_INSUFFICIENT", "wave": 11}, {"id": "K-05", "ph": "P3", "title": "Màn hình Phiếu xuất (form + thông báo kết quả như mẫu)", "deps": ["K-04", "F-08"], "size": "M", "spec": "§7.2", "done": "Khớp mẫu; thông báo lỗi nêu rõ dự án và số lượng đang giữ", "wave": 12}, {"id": "K-06", "ph": "P3", "title": "Nhập kho bằng quét mã: tìm theo barcode/sku, gợi ý dòng PO, nhập một phần", "deps": ["K-01", "M-03"], "size": "L", "spec": "§6.4", "done": "Nhận 4/6 servo → PO partial, BOM giữ chỗ +4; dùng được trên điện thoại", "wave": 15}, {"id": "K-07", "ph": "P3", "title": "Kiểm kê: tạo phiếu, nhập thực đếm, lý do, duyệt điều chỉnh (chặn làm on_hand < reserved)", "deps": ["K-01", "F-08"], "size": "L", "spec": "§7.3", "done": "Chênh lệch âm bắt buộc lý do; ca on_hand < reserved sinh danh sách dự án ảnh hưởng và PR bù", "wave": 10}, {"id": "M-01", "ph": "P4", "title": "PR: danh sách, tạo thủ công, huỷ; tab PR trên màn hình mua hàng", "deps": ["K-02", "F-08"], "size": "M", "spec": "§6.1", "done": "PR tự sinh từ BOM hiển thị đủ; nút Tạo PO hoạt động", "wave": 12}, {"id": "M-02", "ph": "P4", "title": "PO: tạo từ PR (gộp theo NCC), sửa, gửi, xác nhận, huỷ; máy trạng thái", "deps": ["M-01", "D-02"], "size": "L", "spec": "§6.2", "done": "Chuyển trạng thái sai bị INVALID_STATE; xác nhận PO mới cộng qty_ordered vào BOM", "wave": 13}, {"id": "M-03", "ph": "P4", "title": "Dòng PO: unit_price, lead_time, tính ETA, sửa tay ETA có lịch sử", "deps": ["M-02"], "size": "M", "spec": "§6.2, §6.3", "done": "eta = order + lead; sửa tay ghi before/after", "wave": 14}, {"id": "M-04", "ph": "P4", "title": "Tạo Payables từ điều khoản thanh toán PO; xuất PDF PO", "deps": ["M-02", "C-01"], "size": "M", "spec": "§6.2", "done": "PO \"Cọc 30%, còn lại net 15\" sinh đúng 2 khoản phải trả", "wave": 14}, {"id": "M-05", "ph": "P4", "title": "Màn hình Theo dõi ETA (Gantt, vạch cần lắp, màu đỏ/vàng/xanh) và tab PO", "deps": ["M-03", "F-08"], "size": "L", "spec": "§6.3", "done": "Khớp mẫu; màu theo quy tắc đỏ/vàng/xanh/xanh lá", "wave": 15}, {"id": "T-01", "ph": "P5", "title": "Task: API CRUD, move, ràng buộc phụ thuộc và hạn dự án", "deps": ["B-01", "H-01"], "size": "M", "spec": "§11.1", "done": "Task phụ thuộc chưa xong không chuyển được sang doing (trừ manager)", "wave": 10}, {"id": "T-02", "ph": "P5", "title": "Kanban: 4 cột, kéo thả, nút ‹ › cho điện thoại, thông báo QC", "deps": ["T-01", "F-08"], "size": "L", "spec": "§11.2", "done": "Kéo thả cập nhật DB; chuyển qc gửi Notification; cập nhật tiến độ dự án", "wave": 11}, {"id": "T-03", "ph": "P5", "title": "Lịch tháng: 5 loại sự kiện, lọc theo dự án", "deps": ["T-01", "M-03", "B-03"], "size": "M", "spec": "§11.3", "done": "Hiển thị đúng sự kiện từ Tasks/POLines/Payments/Trips/Projects", "wave": 15}, {"id": "T-04", "ph": "P5", "title": "Tiến độ dự án % từ task, hiển thị ở mọi nơi dùng chung một hàm", "deps": ["T-01"], "size": "S", "spec": "§5.1", "done": "Một nguồn tính duy nhất; test với 4 trạng thái", "wave": 11}, {"id": "H-03", "ph": "P6", "title": "Tải việc nhân viên + gợi ý phân công top 3", "deps": ["T-01", "H-02"], "size": "M", "spec": "§8.3", "done": "Loại người nghỉ/công tác, chứng chỉ hết hạn; trả điểm và lý do", "wave": 11}, {"id": "R-01", "ph": "P6", "title": "Đơn từ: mô hình dữ liệu + API tạo đơn 4 loại + kiểm tra hợp lệ", "deps": ["H-01", "B-01"], "size": "M", "spec": "§9.1", "done": "Mỗi loại đơn kiểm tra trường bắt buộc; nghỉ phép kiểm tra số ngày phép", "wave": 10}, {"id": "R-02", "ph": "P6", "title": "Luồng duyệt 2 cấp, người duyệt theo dự án/quản lý, ủy quyền, không tự duyệt", "deps": ["R-01", "F-06"], "size": "L", "spec": "§9.2", "done": "Từ chối bắt buộc lý do; không tự duyệt đơn của mình; nhắc đơn quá 24 giờ", "wave": 11}, {"id": "R-03", "ph": "P6", "title": "Hiệu ứng khi duyệt: Attendance, PayrollInputs, ProjectCosts, chi dự kiến; đảo ngược được", "deps": ["R-02", "B-07"], "size": "L", "spec": "§9.3", "done": "Duyệt OT 3 giờ làm lương và giá thành tăng đúng; gọi duyệt hai lần không cộng đôi", "wave": 13}, {"id": "R-04", "ph": "P6", "title": "Màn hình Đơn từ: hộp thư chờ duyệt, tất cả đơn, thanh bước duyệt", "deps": ["R-02", "F-08"], "size": "M", "spec": "§9.2", "done": "Khớp mẫu; đổi vai trò đổi hộp thư", "wave": 12}, {"id": "R-05", "ph": "P6", "title": "Form tạo đơn theo loại + tự tính chi phí/trợ cấp công tác", "deps": ["R-01", "F-08"], "size": "M", "spec": "§9.1", "done": "Trợ cấp = ngày × đơn giá cấu hình; tổng cập nhật tức thời", "wave": 11}, {"id": "C-01", "ph": "P7", "title": "Sổ quỹ: CashAccounts, CashLedger, số dư tính từ sổ, số phiếu liên tục", "deps": ["F-03"], "size": "M", "spec": "§10.5", "done": "Số dư = đầu kỳ + thu − chi; không sửa/xoá phiếu, chỉ đảo", "wave": 4}, {"id": "C-02", "ph": "P7", "title": "Phiếu thu theo đợt dự án + gạch nợ ProjectPayments/Receivables trong một khóa", "deps": ["C-01", "B-03"], "size": "L", "spec": "§10.3", "done": "Lập phiếu thu → đợt Đã thu, công nợ giảm, quỹ tăng; thu thiếu giữ phần còn lại", "wave": 11}, {"id": "C-03", "ph": "P7", "title": "Phiếu chi (mua vật tư, trợ cấp, lương); chặn tiền mặt âm; cập nhật Payables", "deps": ["C-01", "M-04"], "size": "M", "spec": "§10.5", "done": "Chi vượt tiền mặt bị chặn; gắn PO cập nhật paid_vnd", "wave": 15}, {"id": "C-04", "ph": "P7", "title": "VietQR: cấu hình ngân hàng, tạo URL ảnh, nội dung CK, modal + nút sao chép", "deps": ["B-03", "F-10"], "size": "M", "spec": "§10.2", "done": "Thiếu cấu hình báo lỗi rõ; ảnh QR hiển thị đúng số tiền và nội dung", "wave": 11}, {"id": "C-05", "ph": "P7", "title": "Công nợ phải thu/phải trả và bảng tuổi nợ 5 nhóm; xem theo dự án", "deps": ["C-02", "C-03"], "size": "M", "spec": "§10.4", "done": "Phân nhóm tuổi nợ đúng ở các ngày biên 0/30/60/90", "wave": 16}, {"id": "C-06", "ph": "P7", "title": "Màn hình Tài chính: 3 tab (Đợt thanh toán, Công nợ, Sổ quỹ) + form lập phiếu", "deps": ["C-02", "C-04", "C-05", "F-08"], "size": "L", "spec": "§10", "done": "Khớp mẫu; thao tác lập phiếu thu chạy trọn vòng", "wave": 17}, {"id": "A-01", "ph": "P8", "title": "Lớp lib_ai: gọi Gemini, ép JSON, kiểm schema, retry 1 lần, cache theo hash, ghi token", "deps": ["F-04"], "size": "M", "spec": "§12.1", "done": "Đầu ra sai schema được thử lại rồi trả AI_ERROR; cache hoạt động", "wave": 5}, {"id": "A-02", "ph": "P8", "title": "AIAlerts + engine cảnh báo bằng quy tắc (ETA trễ/sát hạn, tồn thấp, quá hạn, chứng chỉ)", "deps": ["M-03", "K-03", "C-05", "H-02"], "size": "L", "spec": "§12.2, §8.2", "done": "Fingerprint chống trùng; cảnh báo tự resolved khi hết điều kiện", "wave": 17}, {"id": "A-03", "ph": "P8", "title": "Trigger quét hằng ngày + Gemini viết đề xuất + thông báo/email mức đỏ", "deps": ["A-01", "A-02"], "size": "M", "spec": "§12.2", "done": "Cảnh báo đỏ ETA servo xuất hiện sau lần quét; email gửi cho QLDA và mua hàng", "wave": 18}, {"id": "A-04", "ph": "P8", "title": "Bóc tách BOM từ file thiết kế bằng AI + khớp mã + đưa vào màn xem trước", "deps": ["A-01", "B-05"], "size": "L", "spec": "§12.3", "done": "≥ 90% dòng khớp đúng ở bộ mẫu 30 dòng; dòng không chắc tô vàng", "wave": 12}, {"id": "A-05", "ph": "P8", "title": "Gợi ý nhận xét duyệt đơn (rủi ro + nhận xét đề xuất)", "deps": ["A-01", "R-02"], "size": "S", "spec": "§12.5", "done": "Chỉ điền vào ô nhận xét, không tự duyệt", "wave": 12}, {"id": "A-06", "ph": "P8", "title": "Khung chat Trợ lý AI + 3 câu hỏi mẫu + báo cáo tuần tự động thứ Hai", "deps": ["A-01", "A-02", "T-04"], "size": "L", "spec": "§12.6", "done": "Trả lời dựa trên ngữ cảnh tổng hợp bằng code; email báo cáo tuần gửi đúng giờ", "wave": 18}, {"id": "Z-01", "ph": "P9", "title": "Bảng điều khiển: dashboard.summary (cache 60s) + màn hình tổng quan", "deps": ["A-02", "C-05", "T-04", "R-04"], "size": "L", "spec": "§13", "done": "Khớp mẫu; tải < 3 giây", "wave": 18}, {"id": "Z-02", "ph": "P9", "title": "Thông báo: chuông trong ứng dụng + email, đánh dấu đã đọc", "deps": ["F-06"], "size": "M", "spec": "§9.2", "done": "Thông báo mới hiện không cần tải lại trang (thăm dò 30 giây)", "wave": 6}, {"id": "Z-03", "ph": "P9", "title": "Sao lưu hằng đêm sang Drive, giữ 30 bản; lưu trữ theo năm các bảng lịch sử", "deps": ["F-02"], "size": "M", "spec": "§14 NF-3, NF-4", "done": "Khôi phục thử từ một bản sao lưu thành công", "wave": 3}, {"id": "Z-04", "ph": "P9", "title": "Kiểm thử E2E theo 7 kịch bản §15 trên dữ liệu thử", "deps": ["Z-01", "C-06", "R-03", "K-06", "A-03"], "size": "L", "spec": "§15", "done": "Cả 7 kịch bản qua; ghi biên bản vào docs/", "wave": 19}, {"id": "Z-05", "ph": "P9", "title": "Rà soát hiệu năng (50.000 dòng), truy cập (WCAG AA), thử trên điện thoại + máy quét mã", "deps": ["Z-04"], "size": "M", "spec": "§14", "done": "Đạt NF-1, NF-5, NF-6; danh sách lỗi tồn đọng được phân loại", "wave": 20}, {"id": "Z-06", "ph": "P9", "title": "Nhập dữ liệu thật ban đầu (danh mục, nhân sự, tồn kho đầu kỳ, công nợ đầu kỳ) + đào tạo", "deps": ["Z-04"], "size": "L", "spec": "§3", "done": "Số tồn và số dư quỹ đầu kỳ khớp sổ sách của công ty; biên bản bàn giao", "wave": 20}, {"id": "Z-07", "ph": "P9", "title": "Triển khai bản chính thức, phân quyền người dùng, tài liệu hướng dẫn ngắn", "deps": ["Z-05", "Z-06"], "size": "M", "spec": "§2", "done": "Mỗi vai trò có người dùng thử đăng nhập đúng quyền", "wave": 21}], "phases": {"P0": "Giai đoạn 0 · Nền tảng", "P1": "Giai đoạn 1 · Danh mục & Nhân sự gốc", "P2": "Giai đoạn 2 · Dự án & BOM", "P3": "Giai đoạn 3 · Kho", "P4": "Giai đoạn 4 · Mua hàng & ETA", "P5": "Giai đoạn 5 · Công việc & Lịch", "P6": "Giai đoạn 6 · Đơn từ & Phê duyệt", "P7": "Giai đoạn 7 · Tài chính & Công nợ", "P8": "Giai đoạn 8 · Trợ lý AI", "P9": "Giai đoạn 9 · Hoàn thiện & Triển khai"}, "hours": {"S": 2, "M": 4, "L": 8}};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const HRS={S:2,M:4,L:8};
+const ST=[['todo','Chưa làm'],['doing','Đang làm'],['review','Chờ nghiệm thu'],['accepted','Đạt'],['rework','Làm lại']];
+const CR=[
+ {k:'c1',t:'Đạt đúng tiêu chí "Xong khi" của task',w:40,gate:1},
+ {k:'c2',t:'Test chạy qua, gồm cả ca sai và đầu vào xấu',w:20,gate:1},
+ {k:'c3',t:'Đúng quy tắc nghiệp vụ và phân quyền trong đặc tả',w:15,gate:1},
+ {k:'c4',t:'Giao diện khớp mẫu, dùng được ở 400px và 1440px, sáng và tối',w:10},
+ {k:'c5',t:'Có AuditLog, CHANGELOG và báo cáo của agent (file sửa, cách test, giả định)',w:10},
+ {k:'c6',t:'Không làm hỏng task trước (chạy lại test cũ vẫn qua)',w:5}];
+let status={},acc={},open={},fSt='all',fPh='all',q='';
+try{status=JSON.parse(localStorage.getItem('minierp_status_v2')||'{}');acc=JSON.parse(localStorage.getItem('minierp_acc_v2')||'{}')}catch(e){}
+const save=()=>{try{localStorage.setItem('minierp_status_v2',JSON.stringify(status));localStorage.setItem('minierp_acc_v2',JSON.stringify(acc))}catch(e){}};
+const get=id=>status[id]||'todo';
+const A=id=>acc[id]||(acc[id]={c:{},note:'',rounds:0,score:null,first:null});
+const T=D.tasks,byId=Object.fromEntries(T.map(t=>[t.id,t]));
+const blocked=t=>get(t.id)!=='accepted'&&t.deps.some(d=>get(d)!=='accepted');
+const eff=t=>{const s=get(t.id);return s==='accepted'?'accepted':s==='review'?'review':s==='rework'?'rework':blocked(t)?'blocked':s==='doing'?'doing':'ready'};
+function evalAcc(id){const c=A(id).c;let got=0,tot=0,unans=0,gateFail=false;
+  CR.forEach(r=>{const v=c[r.k];if(!v){unans++;return}if(v==='na')return;tot+=r.w;if(v==='y')got+=r.w;else if(r.gate)gateFail=true});
+  const score=tot?Math.round(100*got/tot):0;
+  let verdict='Chưa chấm đủ',kind='';
+  if(!unans){if(gateFail||score<70){verdict='Làm lại';kind='bad'}else if(score<85){verdict='Cần sửa nhỏ rồi chấm lại';kind='warn'}else{verdict='Đạt';kind='good'}}
+  return{score,unans,gateFail,verdict,kind}}
+function toast(m){const e=$('#toast');e.textContent=m;e.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>e.hidden=true,2600)}
+const HEAD='Bạn là lập trình viên Google Apps Script + HTML/JS. Dự án: Mini ERP chế tạo máy.\nTài liệu: MINI_ERP_AGENT_SPEC.md (đặc tả), mini-erp-ui.html (giao diện chuẩn), MINI_ERP_TASKS.md.\n\n';
+function prompt_(t){return HEAD+`NHIỆM VỤ: thực hiện task ${t.id} — ${t.title}.\n- Đọc kỹ mục ${t.spec} trong đặc tả, cùng §0 (quy tắc) và §1 (quy ước chung).\n- Chỉ làm đúng phạm vi task. Thiếu thông tin thì ghi giả định vào báo cáo.\n- Tiêu chí hoàn thành: ${t.done}.\n- Viết hàm test_<tên>() chạy được trong Apps Script editor, gồm cả ca sai.\n- Cập nhật CHANGELOG.md.\n- Sẽ được nghiệm thu theo 6 tiêu chí (mục "Nghiệm thu từng task" trong MINI_ERP_TASKS.md).\n\nBÁO CÁO khi xong: (1) file đã sửa, (2) cách chạy test và kết quả, (3) giả định/điểm tồn đọng.`}
+function fix_(t){const a=A(t.id),bad=CR.filter(r=>a.c[r.k]==='n');
+  return HEAD+`SỬA LẠI task ${t.id} — ${t.title} (lần nghiệm thu ${a.rounds}: chưa đạt).\nCác tiêu chí chưa đạt:\n${bad.map(r=>'- '+r.t).join('\n')||'- Điểm tổng chưa đủ 85'}\nGhi chú của người nghiệm thu: ${a.note||'(không có)'}\n\nChỉ sửa những điểm trên, không mở rộng phạm vi. Chạy lại toàn bộ test của task này và các task phụ thuộc, rồi báo cáo như mẫu.`}
+function copy(text,msg){const ok=()=>toast(msg);
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(ok,fallback)}else fallback();
+  function fallback(){const a=document.createElement('textarea');a.value=text;document.body.appendChild(a);a.select();let r=false;try{r=document.execCommand('copy')}catch(e){}a.remove();toast(r?msg:'Không sao chép được, hãy chọn văn bản thủ công')}}
+const pillFor=e=>({accepted:'<span class="pill good">Đạt</span>',review:'<span class="pill info">Chờ nghiệm thu</span>',rework:'<span class="pill bad">Làm lại</span>',doing:'<span class="pill info">Đang làm</span>',blocked:'<span class="pill">Bị chặn</span>',ready:'<span class="pill warn">Sẵn sàng</span>'}[e]);
+
+function accPanel(t){const a=A(t.id),r=evalAcc(t.id),st=get(t.id);
+  return `<div class="acc"><div class="acc-h"><b>Nghiệm thu ${t.id}</b><span class="tag">Lượt ${a.rounds+1}</span><span style="flex:1"></span><span class="score">${r.unans?'—':r.score+'/100'}</span><span class="pill ${r.kind}">${r.verdict}</span></div>
+  ${CR.map(c=>`<div class="crit"><div class="lbl">${esc(c.t)}${c.gate?'<span class="gate">BẮT BUỘC</span>':''}<br><small>Trọng số ${c.w}</small></div><div class="seg3" role="group" aria-label="${esc(c.t)}">${[['y','Đạt'],['n','Không'],['na','N/A']].map(([v,l])=>`<button class="${v}" data-c="${t.id}:${c.k}:${v}" aria-pressed="${a.c[c.k]===v}">${l}</button>`).join('')}</div></div>`).join('')}
+  <div class="acc-f"><div><b style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3)">Xong khi</b><div>${esc(t.done)}</div></div>
+  <textarea class="txt" data-note="${t.id}" placeholder="Ghi chú nghiệm thu: lỗi tìm thấy, điểm cần sửa, bằng chứng đã kiểm tra" aria-label="Ghi chú nghiệm thu ${t.id}">${esc(a.note)}</textarea>
+  <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" data-fin="${t.id}" ${r.unans||st==='accepted'?'disabled style="opacity:.5;cursor:not-allowed"':''}>Chốt kết quả</button><button class="btn" data-copy="${t.id}">Sao chép prompt giao việc</button>${a.rounds>0||st==='rework'?`<button class="btn" data-fix="${t.id}">Sao chép prompt sửa lỗi</button>`:''}</div>
+  <div class="verdict" style="color:var(--ink-3)">${r.unans?`Còn ${r.unans} tiêu chí chưa chấm.`:'Đạt: điểm ≥ 85 và 3 tiêu chí bắt buộc đều Đạt. Dưới 70 hoặc có tiêu chí bắt buộc Không: làm lại.'}</div></div></div>`}
+
+function render(){
+  const tot=T.reduce((s,t)=>s+HRS[t.size],0),dn=T.filter(t=>get(t.id)==='accepted').reduce((s,t)=>s+HRS[t.size],0);
+  const cnt=k=>T.filter(t=>eff(t)===k).length;
+  const accd=T.filter(t=>get(t.id)==='accepted'),fp=accd.filter(t=>A(t.id).rounds===0).length;
+  const scs=accd.map(t=>A(t.id).score).filter(x=>x!=null),avg=scs.length?Math.round(scs.reduce((a,b)=>a+b,0)/scs.length):null;
+  $('#stats').innerHTML=`<div class="card stat"><small>Tiến độ đã nghiệm thu</small><strong>${Math.round(100*dn/tot)}%</strong><span>${dn} / ${tot} giờ ước lượng</span><div class="prog" style="margin-top:6px"><i style="width:${100*dn/tot}%"></i></div></div>
+   <div class="card stat"><small>Đạt</small><strong>${accd.length}</strong><span>trên ${T.length} task</span></div>
+   <div class="card stat"><small>Chờ nghiệm thu</small><strong>${cnt('review')}</strong><span>cần người chấm</span></div>
+   <div class="card stat"><small>Làm lại</small><strong>${cnt('rework')}</strong><span>chưa đạt</span></div>
+   <div class="card stat"><small>Đạt ngay lần đầu</small><strong>${accd.length?Math.round(100*fp/accd.length)+'%':'—'}</strong><span>Điểm TB ${avg??'—'}</span></div>
+   <div class="card stat"><small>Sẵn sàng giao</small><strong>${cnt('ready')}</strong><span>bị chặn: ${cnt('blocked')}</span></div>`;
+  $('#stf').innerHTML=[['all','Tất cả'],['ready','Sẵn sàng'],['doing','Đang làm'],['review','Chờ nghiệm thu'],['rework','Làm lại'],['blocked','Bị chặn'],['accepted','Đạt']].map(([k,l])=>`<button class="chip" data-st="${k}" aria-pressed="${fSt===k}">${l}</button>`).join('');
+  $('#phf').innerHTML=`<button class="chip" data-ph="all" aria-pressed="${fPh==='all'}">Mọi giai đoạn</button>`+Object.keys(D.phases).map(k=>`<button class="chip" data-ph="${k}" aria-pressed="${fPh===k}">${k}</button>`).join('');
+  const ql=q.toLowerCase();let html='';
+  Object.entries(D.phases).forEach(([k,name])=>{
+    if(fPh!=='all'&&fPh!==k)return;
+    const all=T.filter(t=>t.ph===k);
+    const list=all.filter(t=>(fSt==='all'||eff(t)===fSt)&&(!ql||(t.id+' '+t.title).toLowerCase().includes(ql)));
+    if(!list.length)return;
+    const done=all.filter(t=>get(t.id)==='accepted').length;
+    html+=`<section class="card"><div class="ph-h"><h2>${esc(name)}</h2><span class="note">${done}/${all.length} đạt</span><div class="prog"><i style="width:${100*done/all.length}%"></i></div></div>
+    ${list.map(t=>{const e=eff(t),a=acc[t.id];return `<div class="task ${e==='blocked'?'blocked':''}"><div class="id">${t.id}</div>
+      <div style="min-width:0"><button class="t" data-open="${t.id}" aria-expanded="${!!open[t.id]}">${esc(t.title)}</button>
+      <div class="meta"><span class="tag sz">${t.size} · ${HRS[t.size]}h</span><span class="tag">Đợt ${t.wave}</span><span class="tag">${esc(t.spec)}</span>${a&&a.rounds?`<span class="tag no">Làm lại ${a.rounds} lần</span>`:''}${a&&get(t.id)==='accepted'&&a.score!=null?`<span class="tag ok">Điểm ${a.score}</span>`:''}
+      ${t.deps.map(d=>`<span class="tag ${get(d)==='accepted'?'ok':'no'}" title="${esc(byId[d].title)}">${get(d)==='accepted'?'✓':'chờ'} ${d}</span>`).join('')}</div></div>
+      <div class="acts">${pillFor(e)}<select class="sel" data-sel="${t.id}" aria-label="Trạng thái ${t.id}">${ST.filter(([v])=>v!=='accepted'||get(t.id)==='accepted').map(([v,l])=>`<option value="${v}" ${get(t.id)===v?'selected':''}>${l}</option>`).join('')}</select></div>
+      ${open[t.id]?(get(t.id)==='review'||get(t.id)==='rework'||get(t.id)==='accepted'?accPanel(t):`<div class="detail"><div><b>Xong khi</b>${esc(t.done)}</div><div><b>Phụ thuộc</b>${t.deps.length?t.deps.map(d=>`${d} · ${esc(byId[d].title)}`).join('<br>'):'Không có'}</div><div><button class="btn" data-copy="${t.id}">Sao chép prompt giao việc</button> <span class="note" style="color:var(--ink-3)">Khi agent báo xong, đổi trạng thái sang "Chờ nghiệm thu" để chấm.</span></div></div>`):''}</div>`}).join('')}</section>`});
+  $('#list').innerHTML=html||'<div class="card empty">Không có task phù hợp bộ lọc.</div>';
+  document.querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>{fSt=b.dataset.st;render()});
+  document.querySelectorAll('[data-ph]').forEach(b=>b.onclick=()=>{fPh=b.dataset.ph;render()});
+  document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>{open[b.dataset.open]=!open[b.dataset.open];render()});
+  document.querySelectorAll('[data-sel]').forEach(s=>s.onchange=()=>{const id=s.dataset.sel,v=s.value;
+    if(v==='review'){A(id).c={};A(id).score=null;open[id]=true}
+    if(get(id)==='accepted'&&v!=='accepted'){A(id).score=null}
+    status[id]=v;save();render()});
+  document.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{const [id,k,v]=b.dataset.c.split(':');A(id).c[k]=v;save();render()});
+  document.querySelectorAll('[data-note]').forEach(n=>n.onchange=()=>{A(n.dataset.note).note=n.value;save()});
+  document.querySelectorAll('[data-fin]').forEach(b=>b.onclick=()=>{const id=b.dataset.fin,a=A(id),r=evalAcc(id);
+    const n=document.querySelector(`[data-note="${id}"]`);if(n)a.note=n.value;
+    if(r.kind==='good'){status[id]='accepted';a.score=r.score;toast(`${id} đạt nghiệm thu, ${r.score} điểm`)}
+    else{status[id]='rework';a.rounds++;a.score=r.score;toast(`${id} chưa đạt (${r.score} điểm). Đã chuyển Làm lại.`)}
+    save();render()});
+  document.querySelectorAll('[data-copy]').forEach(b=>b.onclick=()=>copy(prompt_(byId[b.dataset.copy]),'Đã sao chép prompt giao việc'));
+  document.querySelectorAll('[data-fix]').forEach(b=>b.onclick=()=>copy(fix_(byId[b.dataset.fix]),'Đã sao chép prompt sửa lỗi'));
+}
+$('#q').oninput=e=>{q=e.target.value;render()};
+$('#reset').onclick=()=>{status={};acc={};save();render();toast('Đã đặt lại')};
+render();
+</script>
+
+</body></html>

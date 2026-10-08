@@ -1,0 +1,52 @@
+<script>
+(function(){
+  'use strict';
+  var settingsRoute=route;
+  var definitions=[
+    ['ot_multiplier_weekday','Hệ số OT ngày thường','Ví dụ: 1.5','number'],
+    ['trip_allowance_per_day','Trợ cấp công tác mỗi ngày','Đơn vị VND','number'],
+    ['vietqr_bank_id','Mã ngân hàng VietQR','Mã ngân hàng dùng khi tạo QR','text'],
+    ['vietqr_account_no','Số tài khoản VietQR','Số tài khoản nhận tiền','text'],
+    ['vietqr_account_name','Tên chủ tài khoản VietQR','Tên hiển thị của chủ tài khoản','text'],
+    ['alert_soon_days','Số ngày cảnh báo sớm','Ví dụ: 4','number'],
+    ['ai_scan_hour','Giờ chạy quét AI','0–23','number']
+  ];
+
+  route=function(){
+    var current=(location.hash||'#dashboard').slice(1);
+    if(current==='settings'){
+      renderSettingsPage();
+      document.querySelectorAll('.nav a').forEach(function(a){a.classList.toggle('active',a.hash==='#settings')});
+      viewName.textContent='Cấu hình';
+      return;
+    }
+    settingsRoute();
+  };
+  addEventListener('hashchange',function(){route()});
+
+  function renderSettingsPage(){
+    var view=document.querySelector('main.content');
+    view.dataset.page='settings';
+    view.innerHTML='<div class="head"><div><h1>Cấu hình hệ thống</h1><p>Thay đổi có hiệu lực ngay, không cần triển khai lại.</p></div><span class="status" id="settingsStatus">Đang tải…</span></div><div class="settings-layout"><section class="card component-block"><h2>Settings</h2><form id="settingsForm" novalidate><div id="settingsFields" class="settings-fields"></div><div class="settings-actions"><button class="btn primary" id="saveSettings" type="submit">Lưu cấu hình</button></div></form></section><section class="card component-block"><h2>Counters</h2><p class="label">Chỉ đọc. Bộ đếm được cập nhật tự động khi sinh mã chứng từ.</p><div id="counterTable"><div class="sk"></div><div class="sk"></div></div></section></div>';
+    Promise.all([MiniERP.api.call('settings.list',{}, {silent:true}),MiniERP.api.call('counter.list',{}, {silent:true})]).then(function(results){
+      populateSettings(results[0].data||[]);renderCounters(results[1].data||[]);settingsStatus.textContent='● Đã tải';
+    }).catch(function(error){settingsStatus.textContent='Không thể tải';MiniERP.ui.toast({type:'error',title:'Không thể tải cấu hình',message:error.message})});
+  }
+
+  function populateSettings(rows){
+    var byKey={};rows.forEach(function(row){byKey[row.key]=row});
+    settingsFields.innerHTML=definitions.map(function(def){var row=byKey[def[0]]||{};return '<div class="field"><label for="setting-'+MiniERP.ui.escape(def[0])+'">'+MiniERP.ui.escape(def[1])+'</label><input id="setting-'+MiniERP.ui.escape(def[0])+'" data-setting="'+MiniERP.ui.escape(def[0])+'" type="'+def[3]+'" value="'+MiniERP.ui.escape(row.value||'')+'" aria-describedby="setting-'+MiniERP.ui.escape(def[0])+'-help"><div id="setting-'+MiniERP.ui.escape(def[0])+'-help" class="field-help">'+MiniERP.ui.escape(def[2])+'</div></div>'}).join('');
+    settingsForm.onsubmit=saveSettings;
+  }
+
+  function saveSettings(event){
+    event.preventDefault();var button=document.getElementById('saveSettings');button.disabled=true;button.textContent='Đang lưu…';
+    var entries=definitions.map(function(def){var input=document.querySelector('[data-setting="'+def[0]+'"]');return {key:def[0],value:input.value,note:def[1]}});
+    MiniERP.api.call('settings.save',{entries:entries}).then(function(){MiniERP.ui.toast({type:'success',title:'Đã lưu cấu hình',message:'Giá trị mới có hiệu lực ngay.'});settingsStatus.textContent='● Đã lưu'}).catch(function(){}).finally(function(){button.disabled=false;button.textContent='Lưu cấu hình'});
+  }
+
+  function renderCounters(rows){
+    counterTable.innerHTML=MiniERP.ui.table({columns:[{key:'prefix',label:'Tiền tố'},{key:'period',label:'Kỳ'},{key:'last_seq',label:'Số cuối',numeric:true}],rows:rows,emptyText:'Chưa phát sinh bộ đếm'});
+  }
+})();
+</script>

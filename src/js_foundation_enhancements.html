@@ -1,0 +1,66 @@
+<script>
+(function(){
+  'use strict';
+  var view=document.querySelector('main.content');
+  var dashboardHtml=view.innerHTML;
+  var baseSession=session;
+  var baseRoute=route;
+
+  function ensureStyleGuideLink(){
+    if(!nav.querySelector('[data-foundation="style-guide"]')&&nav.querySelector('a[href="#settings"]')){
+      var link=document.createElement('a');
+      link.href='#style-guide';link.dataset.foundation='style-guide';link.innerHTML=ICON+'<span>Style Guide</span>';
+      nav.appendChild(link);
+    }
+  }
+
+  new MutationObserver(ensureStyleGuideLink).observe(nav,{childList:true});
+
+  document.addEventListener('click',function(event){
+    var link=event.target.closest&&event.target.closest('a[href^="#"]');
+    if(!link)return;
+    event.preventDefault();
+    var nextHash=link.getAttribute('href');
+    if(location.hash===nextHash){route()}else{location.hash=nextHash}
+  });
+
+  session=function(response){
+    baseSession(response);
+    if(response&&response.ok&&response.data&&response.data.perms&&response.data.perms.settings){
+      ensureStyleGuideLink();
+    }
+  };
+
+  route=function(){
+    var current=(location.hash||'#dashboard').slice(1);
+    if(current==='style-guide'){
+      renderStyleGuide();
+      document.querySelectorAll('.nav a').forEach(function(a){a.classList.toggle('active',a.hash==='#style-guide')});
+      viewName.textContent='Style Guide';
+      return;
+    }
+    if(view.dataset.page){view.innerHTML=dashboardHtml;delete view.dataset.page}
+    baseRoute();
+  };
+
+  addEventListener('hashchange',function(){route()});
+
+  function renderStyleGuide(){
+    view.dataset.page='style-guide';
+    view.innerHTML='<div class="head"><div><h1>Thư viện giao diện</h1><p>Thành phần dùng chung của Mini ERP · F-08 và F-09.</p></div><span class="status">● Sẵn sàng</span></div><div class="component-grid">'
+      +'<section class="card component-block"><h2>Nút và chip trạng thái</h2><div class="stack"><button class="btn primary" id="demoToast">Hiện toast</button><button class="btn" id="demoModal">Mở modal</button>'+MiniERP.ui.chip('Hoàn tất','good')+MiniERP.ui.chip('Cần chú ý','warn')+MiniERP.ui.chip('Nguy cấp','bad')+MiniERP.ui.chip('Đang xử lý','info')+'</div></section>'
+      +'<section class="card component-block"><h2>Form và báo lỗi tại trường</h2><form id="demoForm" novalidate>'+MiniERP.ui.formField({id:'styleGuideName',label:'Tên hạng mục',required:true})+'<button class="btn primary" type="submit">Kiểm tra</button></form></section>'
+      +'<section class="card component-block"><h2>Tab</h2><div id="demoTabs"></div></section>'
+      +'<section class="card component-block"><h2>Thanh phân bổ</h2>'+MiniERP.ui.allocation({required:8,reserved:5,ordered:3,issued:2},'Phân bổ BOM mẫu')+'</section>'
+      +'<section class="card component-block" style="grid-column:1/-1"><h2>Bảng dữ liệu</h2><div id="demoTable"></div></section>'
+      +'<section class="card component-block" style="grid-column:1/-1"><h2>Client API và lỗi chuẩn</h2><p class="label">Mọi lời gọi trả Promise; lỗi được chuẩn hóa và hiện toast. LOCK_TIMEOUT có nút Thử lại.</p><button class="btn" id="demoLock">Xem lỗi LOCK_TIMEOUT</button></section>'
+      +'</div>';
+    MiniERP.ui.tabs(document.getElementById('demoTabs'),[{id:'overview',label:'Tổng quan',content:'Nội dung tổng quan.'},{id:'history',label:'Lịch sử',content:'Nội dung lịch sử.'}]);
+    document.getElementById('demoTable').innerHTML=MiniERP.ui.table({columns:[{key:'code',label:'Mã'},{key:'name',label:'Tên'},{key:'amount',label:'Giá trị',numeric:true}],rows:[{code:'DA-2610-01',name:'Máy mẫu',amount:'120.000.000 ₫'}]});
+    document.getElementById('demoToast').onclick=function(){MiniERP.ui.toast({type:'success',title:'Đã lưu',message:'Thao tác mẫu đã hoàn tất.'})};
+    document.getElementById('demoModal').onclick=function(){MiniERP.ui.modal({title:'Xác nhận thao tác',body:'<p>Hộp thoại trong trang thay cho alert, confirm và prompt.</p>',confirmLabel:'Xác nhận',onConfirm:function(){MiniERP.ui.toast('Đã xác nhận thao tác mẫu.')}})};
+    document.getElementById('demoForm').onsubmit=function(e){e.preventDefault();var input=document.getElementById('styleGuideName'),message=input.value.trim()?'':'Vui lòng nhập tên hạng mục.';MiniERP.ui.setFieldError(input.id,message);if(!message)MiniERP.ui.toast({type:'success',title:'Hợp lệ',message:'Biểu mẫu đã vượt qua kiểm tra.'})};
+    document.getElementById('demoLock').onclick=function(){var error=MiniERP.api.normalizeError({code:'LOCK_TIMEOUT'});MiniERP.ui.toast({type:'error',title:'Không thể hoàn tất',message:error.message,duration:0,action:{label:'Thử lại',onClick:function(){MiniERP.ui.toast('Đang thử lại thao tác mẫu.')}}})};
+  }
+})();
+</script>

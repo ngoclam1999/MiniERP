@@ -1,0 +1,13 @@
+{
+  "name": "mini-erp-apps-script",
+  "private": true,
+  "scripts": {
+    "clasp": "clasp",
+    "test:schema": "node tests/test_schema_local.js",
+    "test:ui": "node tests/test_foundation_ui_local.js",
+    "test": "npm run test:schema && npm run test:ui"
+  },
+  "devDependencies": {
+    "@google/clasp": "3.4.1"
+  }
+}

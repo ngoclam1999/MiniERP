@@ -1,0 +1,60 @@
+<script>
+(function(root){
+  'use strict';
+  var MESSAGES={
+    UNAUTHENTICATED:'Phiên đăng nhập không hợp lệ hoặc tài khoản chưa được cấp quyền.',
+    FORBIDDEN:'Bạn không có quyền thực hiện thao tác này.',
+    VALIDATION:'Dữ liệu chưa hợp lệ. Vui lòng kiểm tra lại.',
+    NOT_FOUND:'Không tìm thấy dữ liệu yêu cầu.',
+    CONFLICT:'Dữ liệu đã thay đổi. Vui lòng tải lại và thử lại.',
+    LOCK_TIMEOUT:'Hệ thống đang bận. Vui lòng thử lại sau vài giây.',
+    STOCK_NOT_RESERVED:'Vật tư chưa được giữ chỗ cho dự án.',
+    STOCK_INSUFFICIENT:'Số lượng tồn kho không đủ.',
+    INVALID_STATE:'Trạng thái hiện tại không cho phép thao tác này.',
+    AI_ERROR:'Trợ lý AI chưa thể xử lý yêu cầu.',
+    INTERNAL:'Đã xảy ra lỗi nội bộ.'
+  };
+
+  function call(action,payload,options){
+    options=options||{};
+    var request={action:action,payload:payload||{},client_ts:new Date().toISOString()};
+    return new Promise(function(resolve,reject){
+      if(!root.google||!google.script||!google.script.run){
+        reject(normalize({code:'INTERNAL',message:'Không tìm thấy kết nối Apps Script.'}));
+        return;
+      }
+      google.script.run
+        .withSuccessHandler(function(response){
+          if(response&&response.ok){resolve(response);return;}
+          var error=normalize(response&&response.error);
+          notify(error,options,function(){call(action,payload,options).then(resolve,reject);});
+          reject(error);
+        })
+        .withFailureHandler(function(failure){
+          var error=normalize({code:'INTERNAL',message:failure&&failure.message});
+          notify(error,options,function(){call(action,payload,options).then(resolve,reject);});
+          reject(error);
+        })
+        .api(request);
+    });
+  }
+
+  function normalize(error){
+    error=error||{};
+    var code=MESSAGES[error.code]?error.code:'INTERNAL';
+    return {code:code,message:error.message||MESSAGES[code],field:error.field||''};
+  }
+
+  function notify(error,options,retry){
+    if(options.silent||!root.MiniERP.ui)return;
+    root.MiniERP.ui.toast({
+      type:'error',title:'Không thể hoàn tất',message:error.message,
+      action:error.code==='LOCK_TIMEOUT'?{label:'Thử lại',onClick:retry}:null,
+      duration:error.code==='LOCK_TIMEOUT'?0:5000
+    });
+  }
+
+  root.MiniERP=root.MiniERP||{};
+  root.MiniERP.api={call:call,normalizeError:normalize,messages:MESSAGES};
+})(window);
+</script>

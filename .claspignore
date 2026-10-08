@@ -1,0 +1,6 @@
+**/**
+!appsscript.json
+!src/**
+!tests/**
+tests/*_local.js
+

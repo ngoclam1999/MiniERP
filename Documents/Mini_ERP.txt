@@ -1,0 +1,86 @@
+Dưới đây là mô tả chi tiết toàn bộ Hệ thống Mini ERP Chuyên biệt cho Doanh nghiệp Chế tạo máy & Sản xuất theo Dự án (kéo dài từ 1–6 tháng).
+Hệ thống được thiết kế theo kiến trúc Zero-Cost Cloud Stack (Google Sheets làm Database, Apps Script làm API Backend, HTML5/TailwindCSS làm Frontend WebApp và tích hợp Gemini AI Studio để tự động hóa dự báo & lập kế hoạch).
+I. TỔNG QUAN NỀN TẢNG KỸ THUẬT & KIẾN TRÚC VẬN HÀNH
+	Nền tảng CSDL & Backend: Google Sheets (mỗi Tab là một Bảng dữ liệu đã chuẩn hóa) kết hợp Google Apps Script (REST API Server, quản lý bằng LockService để xử lý đồng thời, chống xung đột ghi dữ liệu).
+	Giao diện WebApp (Frontend): WebApp dạng Single Page Application (SPA) responsive, hiển thị mượt mà trên cả PC và thiết bị di động/máy quét mã vạch.
+	Trợ lý AI (Gemini API): Tự động phân tích Lead-time mua vật tư, cảnh báo trễ tiến độ dự án, bóc tách vật tư từ File thiết kế (BOM) và hỗ trợ phê duyệt đơn từ.
+II. BẢNG MÔ TẢ CHI TIẾT CÁC NHÓM CHỨC NĂNG & LUỒNG VẬN HÀNH
+1. Nhóm Quản lý Dự án & Bóc tách Vật tư (Project & BOM Management)
+	Mục tiêu: Quản lý các dự án chế tạo máy kéo dài 1–6 tháng, kiểm soát chính xác vật tư cho từng máy.
+	Chức năng chính:
+	Hồ sơ Dự án: Quản lý Mã dự án, Tên máy/dây chuyền, Khách hàng, Giá trị hợp đồng, Ngày bắt đầu, Ngày bàn giao dự kiến (Deadline).
+	Quản lý Định mức Vật tư (BOM - Bill of Materials): Cho phép nhập/bóc tách danh sách linh kiện, cơ khí, thiết bị điện (PLC, Servo, Cảm biến, Xylanh...) cần thiết cho dự án.
+	Trạng thái Vật tư Dự án: Theo dõi từng mã vật tư theo 4 chỉ số: Định mức cần → Tồn kho giữ chỗ (Reserved) → Đang đặt mua (PO) → Đã xuất cho dự án.
+	Cách thức vận hành:
+	Kỹ thuật tạo Dự án & nhập bảng BOM → Hệ thống đối soát với Kho chung.
+	Vật tư nào có sẵn trong kho → Chuyển trạng thái sang "Giữ chỗ cho Dự án X" (ngăn không cho dự án khác lấy mất).
+	Vật tư nào thiếu → Tự động đẩy sang danh sách "Yêu cầu mua hàng (PR)" gửi cho bộ phận Mua hàng.
+2. Nhóm Mua hàng, Vật tư & Tiến độ Hàng về (Procurement & ETA Tracking)
+	Mục tiêu: Quản lý mua vật tư nhập khẩu/chế tạo ngoài, đảm bảo vật tư về đúng tiến độ lắp ráp.
+	Chức năng chính:
+	Đơn Mua Hàng (PO): Lập PO gửi Nhà cung cấp, theo dõi đơn giá, điều khoản thanh toán.
+	Theo dõi ETA (Estimated Time of Arrival): Ghi nhận Ngày đặt hàng, Lead-time (thời gian sản xuất/vận chuyển) và Ngày dự kiến hàng về (ETA).
+	Cảnh báo Trễ tiến độ (AI Alert): AI tự động so sánh Ngày ETA của vật tư với Lịch trình lắp ráp dự án. Nếu ETA > Ngày cần lắp → Bật cảnh báo đỏ cho Quản lý.
+	Nhập kho Dự án: Cho phép nhập kho và gán thẳng vật tư vừa về cho Dự án chỉ định.
+	Cách thức vận hành: Nhân viên Mua hàng nhập PO & Cập nhật ETA → Hệ thống cập nhật trạng thái "Đang mua hàng" ở Module Dự án → Khi hàng về kho, Kho quét mã nhận hàng → Tự động chuyển thành "Tồn kho giữ chỗ" hoặc "Đã xuất lắp ráp".
+3. Nhóm Quản lý Tồn kho Đa kho & Kiểm kê (Inventory Management)
+	Chức năng chính:
+	Phân loại Kho: Kho vật tư dùng chung, Kho linh kiện tiêu hao, Kho thành phẩm/máy đã chế tạo xong.
+	Kiểm tra Tồn kho Real-time: Phân biệt rõ Tồn thực tế, Tồn khả dụng (rảnh rỗi) và Tồn đã gán dự án.
+	Kiểm kê & Điều chỉnh: Tạo phiếu kiểm kê thực tế, xử lý chênh lệch do hư hỏng/mất mát trong quá trình chế tạo.
+	Cách thức vận hành: Khi Dự án tiến hành lắp ráp, Kỹ thuật lập Phiếu Xuất kho → Hệ thống kiểm tra đúng mã vật tư đã giữ chỗ cho dự án đó → Trừ tồn kho thực tế và tính chi phí trực tiếp vào Giá thành Dự án.
+4. Nhóm Hồ sơ Nhân sự & Kỹ thuật (HRM & Employee Profiles)
+	Mục tiêu: Quản lý thông tin chi tiết của đội ngũ kỹ sư, thợ cơ khí, thợ điện để phục vụ phân công dự án.
+	Chức năng chính:
+	Thông tin Hành chính: Sơ yếu lý lịch, CCCD, Hợp đồng lao động, Bảo hiểm, Ngân hàng nhận lương, Người liên hệ khẩn cấp.
+	Hồ sơ Kỹ năng & Chứng chỉ: Quản lý chuyên môn (Lập trình PLC, Lắp ráp Cơ khí, Hàn, Thiết kế 3D) và các chứng chỉ an toàn lao động.
+	Lịch sử Phân công: Theo dõi nhân viên đang tham gia những dự án nào, tải công việc hiện tại.
+	Cách thức vận hành: Quản lý dựa vào Hồ sơ Kỹ năng để phân công đúng Nhân sự vào các Công đoạn/Task của Dự án chế tạo.
+5. Nhóm Đơn từ & Quy trình Phê duyệt Tự động (Internal Approval & Paperwork)
+	Mục tiêu: Số hóa toàn bộ thủ tục xin phép, chấm công, loại bỏ giấy tờ thủ công.
+	Chức năng chính:
+	Đơn Xin nghỉ phép / Xin Đi trễ - Về sớm: Chọn lý do, ngày nghỉ, người bàn giao công việc.
+	Đơn Xin làm thêm giờ (OT): Đăng ký số giờ OT, chọn Mã dự án làm OT (để tính chi phí OT vào dự án đó).
+	Báo cáo Công tác & Trợ cấp (Business Trip & Allowance): Đăng ký lịch công tác (lắp đặt/bảo hành máy tại nhà máy Khách hàng), kê khai chi phí phát sinh (vé xe, khách sạn, ăn uống) để nhận trợ cấp.
+	Luồng Duyệt Đơn Đa cấp: Nhân viên gửi đơn → Trưởng phòng/Quản lý dự án duyệt → HR/Kế toán ghi nhận.
+	Cách thức vận hành: Nhân viên tạo đơn trên WebApp/Phone → Quản lý nhận thông báo phê duyệt → Đơn được duyệt tự động chuyển dữ liệu sang Bảng chấm công, Bảng lương và Sổ Quỹ Thu/Chi (đối với trợ cấp công tác).
+6. Nhóm Bán hàng, Công nợ & Tài chính Dự án (Sales, Debt & Treasury)
+	Chức năng chính:
+	Quản lý Báo giá & Hợp đồng: Theo dõi các đợt thanh toán theo tiến độ hợp đồng (ví dụ: Tạm ứng 30% → Giao hàng 50% → Nghiệm thu 20%).
+	Tạo VietQR Chuyển khoản: Tự động tạo mã VietQR chính xác số tiền của từng đợt thanh toán.
+	Theo dõi Công nợ KH & NCC: Phân loại nợ theo dự án, cảnh báo tuổi nợ quá hạn.
+	Sổ Quỹ & Thu/Chi: Quản lý Quỹ tiền mặt, Tài khoản ngân hàng, Lập phiếu thu tiền đợt dự án, Phiếu chi mua vật tư/trợ cấp/chi lương.
+	Cách thức vận hành: Tiền về ngân hàng → Lập Phiếu Thu theo Mã Dự án → Hệ thống tự động gạch nợ đợt thanh toán đó của Khách hàng và cập nhật Số dư Quỹ Real-time.
+7. Nhóm Quản lý Công việc Phòng ban & Tiến độ Lắp ráp (Tasks & Kanban/Calendar)
+	Chức năng chính:
+	Giao việc theo Dự án: Chia nhỏ dự án chế tạo thành các Task (Gia công chi tiết, Đi tủ điện, Lập trình PLC, Lắp ráp cơ khí, Chạy thử - Commissioning).
+	Giao diện Kanban Board: Kéo - thả trạng thái công việc (Chờ gia công → Đang làm → Chờ kiểm tra (QC) → Hoàn thành).
+	Giao diện Calendar (Lịch công việc): Xem tiến độ lắp ráp, lịch công tác, hạn chót nghiệm thu theo dạng Lịch trực quan.
+	Cách thức vận hành: Các Task đều gắn trực tiếp với Mã Dự án, giúp đo lường chính xác tiến độ hoàn thành % tổng thể của máy.
+III. SƠ ĐỒ KẾT NỐI LUỒNG DỮ LIỆU TỔNG THỂ (INTEGRATION FLOW)
+                            [ HỒ SƠ NHÂN VIÊN ]
+                                     │
+                                     ▼
+                      [ ĐƠN TỪ & PHÊ DUYỆT TỰ ĐỘNG ]
+               (Xin nghỉ, OT, Báo cáo công tác & Trợ cấp)
+                                     │
+                                     ▼
+[ KHÁCH HÀNG / HỢP ĐỒNG ] ──► [ QUẢN LÝ DỰ ÁN (BOM) ] ◄─── [ PHÒNG BAN / TASK ]
+(Cơ cấu thanh toán đợt)      (Dự án chế tạo 1-6 tháng)     (Lịch lắp ráp/Gia công)
+         │                           │
+         │                           ▼
+         │                 [ MUA HÀNG & ETA ] ───────► [ KHO VẬT TƯ ]
+         │               (Đặt PO, Theo dõi hàng về)    (Tồn thực tế vs Giữ chỗ)
+         │                           │                         │
+         ▼                           ▼                         ▼
+  [ BÁO CÁO CÔNG NỢ ] ◄──── [ SỔ QUỸ & THU CHI ] ◄──── [ GIÁ THÀNH DỰ ÁN ]
+ (Gạch nợ theo tiến độ)     (Tự động cập nhật Quỹ)     (Vật tư + OT + Trợ cấp)
+                                     │
+                                     ▼
+                            [ GEMINI AI AGENT ]
+                     (Cảnh báo trễ ETA & Lập báo cáo)
+IV. ĐIỂM SÁNG CỦA HỆ THỐNG ĐỐI VỚI DOANH NGHIỆP CHẾ TẠO MẤY
+	Kiểm soát nghẽn Vật tư (Bottleneck): Không lo tình trạng máy đã lắp xong 90% nhưng phải nằm chờ 1 linh kiện nhỏ do trễ ETA mua hàng.
+	Tính chính xác Giá thành Dự án (Project Costing): Tổng chi phí một cỗ máy = Chi phí Vật tư thực tế xuất kho + Chi phí Nhân công OT + Chi phí Trợ cấp & Đi công tác lắp đặt.
+	Số hóa 100% Đơn từ: Trưởng phòng duyệt đơn ngay trên điện thoại, dữ liệu tự động chảy về Bảng lương và Sổ quỹ mà không cần nhập lại tay.
+
