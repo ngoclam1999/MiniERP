@@ -110,6 +110,9 @@ function ensureApiActionsRegistered_() {
   if (typeof registerLedgerActions_ === 'function') registerLedgerActions_();
   if (typeof registerAuthActions_ === 'function') registerAuthActions_();
   if (typeof registerSettingsActions_ === 'function') registerSettingsActions_();
+  if (typeof registerPartnerActions_ === 'function') registerPartnerActions_();
+  if (typeof registerItemActions_ === 'function') registerItemActions_();
+  if (typeof registerEmployeeActions_ === 'function') registerEmployeeActions_();
 }
 
 function validateApiRequest_(request) {

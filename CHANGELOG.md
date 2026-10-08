@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## 2026-10-08
+
+### D-03 Danh mục vật tư
+
+- Thêm API tạo, sửa, tìm kiếm theo SKU/tên/mã vạch và nhập theo lô có bước xem trước.
+- Kiểm tra lỗi theo số dòng, chặn SKU trùng và ghi 500 dòng bằng một lần chèn theo lô.
+- Thêm màn hình vật tư, tìm kiếm/quét mã và nhập dữ liệu dán từ Excel hoặc file CSV.
+
+### H-01 Hồ sơ nhân viên
+
+- Thêm API danh sách, chi tiết, tạo, sửa và `employee.reveal` theo vai trò.
+- Che CCCD và số tài khoản đối với vai trò ngoài `hr/admin`; mọi lần mở dữ liệu nhạy cảm được ghi AuditLog mà không ghi giá trị.
+- Thêm màn hình danh sách/chi tiết nhân viên và dữ liệu mẫu an toàn để kiểm thử.
+
 ## 2026-10-06
 
 ### F-01 Dựng dự án Apps Script
@@ -91,4 +105,16 @@
 - Giá trị Settings được đọc trực tiếp từ Google Sheets nên có hiệu lực không cần triển khai lại.
 - Thêm trang Cấu hình responsive, trạng thái tải/lưu, validation và bảng Counters chỉ đọc.
 - Che giá trị `vietqr_account_no` trong AuditLog; thêm test quyền admin, validation và giao diện.
+
+### D-01 CRUD Khách hàng
+
+- Thêm API danh sách/tìm kiếm/tạo/sửa/xoá mềm khách hàng và chặn trùng mã số thuế.
+- Thêm màn hình Khách hàng responsive, modal biểu mẫu, tìm kiếm và xác nhận xoá trong trang.
+- Chặn xoá khách hàng đã được tham chiếu bởi dự án.
+
+### D-02 CRUD Nhà cung cấp
+
+- Thêm API và màn hình CRUD/tìm kiếm nhà cung cấp, lưu `payment_terms` và `avg_lead_days`.
+- Chặn trùng mã số thuế, lead-time âm và xoá nhà cung cấp đã phát sinh PO/công nợ.
+- Thêm `seed_sample_data()` idempotent với hai khách hàng và hai nhà cung cấp mang mã `DEMO`.
 

@@ -9,6 +9,7 @@ const ui = read('src/js_ui.html');
 const client = read('src/js_client.html');
 const enhancements = read('src/js_foundation_enhancements.html');
 const settings = read('src/js_settings.html');
+const partners = read('src/js_partners.html');
 
 function check(condition, message) {
   if (!condition) throw new Error(message);
@@ -37,7 +38,14 @@ check(index.includes("include('src/js_settings')"), 'Index chưa include trang S
 check(settings.includes("MiniERP.api.call('settings.list'"), 'Trang Settings chưa đọc cấu hình qua Client API.');
 check(settings.includes("MiniERP.api.call('settings.save'"), 'Trang Settings chưa lưu cấu hình qua Client API.');
 check(settings.includes("MiniERP.api.call('counter.list'"), 'Trang Settings chưa tải Counters.');
+check(index.includes("include('src/js_partners')"), 'Index chưa include trang đối tác.');
+check(partners.includes("customers:{title:'Khách hàng'"), 'Thiếu màn hình Khách hàng.');
+check(partners.includes("suppliers:{title:'Nhà cung cấp'"), 'Thiếu màn hình Nhà cung cấp.');
+check(partners.includes("c.module+'.list'"), 'Danh mục chưa gọi API tìm kiếm.');
+check(partners.includes("MiniERP.ui.modal"), 'Form danh mục chưa dùng modal trong trang.');
+check(partners.includes('sequence!==requestSequence||requestKind!==currentKind'), 'Danh mục chưa chặn response cũ khi đổi màn hình.');
 
 console.log('PASS local F-08 test: shared components, Style Guide, no native dialogs');
 console.log('PASS local F-09 test: Promise client, normalized errors, LOCK_TIMEOUT retry');
 console.log('PASS local F-10 UI test: admin settings form and read-only counters');
+console.log('PASS local D-01/D-02 UI test: customer and supplier CRUD screens');

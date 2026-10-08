@@ -1,0 +1,42 @@
+<script>
+(function(){
+  'use strict';
+  var partnerRoute=route,currentKind='',currentRows=[],searchTimer=null,requestSequence=0;
+  var configs={
+    customers:{title:'Khách hàng',singular:'khách hàng',module:'customer',id:'cust_id',permissionAnchor:'#projects',fields:[['cust_id','Mã khách hàng','text',true],['name','Tên khách hàng','text',true],['tax_code','Mã số thuế','text'],['contact_name','Người liên hệ','text'],['phone','Điện thoại','tel'],['email','Email','email'],['address','Địa chỉ','text'],['note','Ghi chú','text']]},
+    suppliers:{title:'Nhà cung cấp',singular:'nhà cung cấp',module:'supplier',id:'sup_id',permissionAnchor:'#purchasing',fields:[['sup_id','Mã nhà cung cấp','text',true],['name','Tên nhà cung cấp','text',true],['tax_code','Mã số thuế','text'],['contact_name','Người liên hệ','text'],['phone','Điện thoại','tel'],['email','Email','email'],['address','Địa chỉ','text'],['payment_terms','Điều khoản thanh toán','text'],['avg_lead_days','Lead-time trung bình (ngày)','number'],['note','Ghi chú','text']]}
+  };
+
+  function ensurePartnerLinks(){
+    Object.keys(configs).forEach(function(kind){var c=configs[kind];if(nav.querySelector('a[href="#'+kind+'"]'))return;var anchor=nav.querySelector('a[href="'+c.permissionAnchor+'"]');if(!anchor)return;var link=document.createElement('a');link.href='#'+kind;link.dataset.partner=kind;link.innerHTML=ICON+'<span>'+c.title+'</span>';anchor.insertAdjacentElement('afterend',link)});
+  }
+  new MutationObserver(ensurePartnerLinks).observe(nav,{childList:true});
+
+  route=function(){
+    var current=(location.hash||'#dashboard').slice(1);
+    if(configs[current]){renderPartnerPage(current);document.querySelectorAll('.nav a').forEach(function(a){a.classList.toggle('active',a.hash==='#'+current)});viewName.textContent=configs[current].title;return}
+    partnerRoute();
+  };
+  addEventListener('hashchange',function(){route()});
+
+  function renderPartnerPage(kind){
+    currentKind=kind;var c=configs[kind],view=document.querySelector('main.content');view.dataset.page=kind;
+    view.innerHTML='<div class="head"><div><h1>'+c.title+'</h1><p>Quản lý danh mục, thông tin liên hệ và dữ liệu nghiệp vụ.</p></div><button class="btn primary" id="addPartner">Thêm '+c.singular+'</button></div><section class="card component-block"><div class="catalog-toolbar"><div class="field catalog-search"><label for="partnerSearch">Tìm kiếm</label><input id="partnerSearch" type="search" placeholder="Mã, tên, mã số thuế, liên hệ…"></div><span id="partnerCount" class="label">Đang tải…</span></div><div id="partnerTable"><div class="sk"></div><div class="sk"></div></div></section>';
+    addPartner.onclick=function(){openPartnerModal(kind,null)};partnerSearch.oninput=function(){clearTimeout(searchTimer);searchTimer=setTimeout(function(){loadPartners(partnerSearch.value)},250)};partnerTable.onclick=handleTableAction;loadPartners('');
+  }
+
+  function loadPartners(search){var requestKind=currentKind,c=configs[requestKind],sequence=++requestSequence;partnerTable.innerHTML='<div class="sk"></div><div class="sk"></div>';MiniERP.api.call(c.module+'.list',{search:search||''},{silent:true}).then(function(r){if(sequence!==requestSequence||requestKind!==currentKind)return;currentRows=r.data||[];renderPartnerTable()}).catch(function(e){if(sequence!==requestSequence||requestKind!==currentKind)return;partnerTable.innerHTML='<div class="empty-view">'+MiniERP.ui.escape(e.message)+'</div>'})}
+
+  function renderPartnerTable(){var c=configs[currentKind],columns=[{key:c.id,label:'Mã'},{key:'name',label:'Tên'},{key:'tax_code',label:'Mã số thuế'},{key:'contact_name',label:'Liên hệ'}];if(currentKind==='suppliers'){columns.push({key:'payment_terms',label:'Thanh toán'},{key:'avg_lead_days',label:'Lead-time',numeric:true})}columns.push({key:'actions',label:'Thao tác',render:function(row){var id=MiniERP.ui.escape(row[c.id]);return '<div class="row-actions"><button class="btn" data-edit="'+id+'">Sửa</button><button class="btn" data-delete="'+id+'">Xoá</button></div>'}});partnerTable.innerHTML=MiniERP.ui.table({columns:columns,rows:currentRows,emptyText:'Chưa có '+c.singular});partnerCount.textContent=currentRows.length+' bản ghi'}
+
+  function handleTableAction(event){var edit=event.target.closest('[data-edit]'),del=event.target.closest('[data-delete]'),c=configs[currentKind];if(edit){openPartnerModal(currentKind,currentRows.find(function(row){return String(row[c.id])===edit.dataset.edit}))}if(del){confirmDelete(currentKind,del.dataset.delete)}}
+
+  function openPartnerModal(kind,row){var c=configs[kind],editing=!!row,body='<form id="partnerForm" class="partner-form" novalidate>'+c.fields.map(function(f){return '<div class="field"><label for="partner-'+f[0]+'">'+f[1]+'</label><input id="partner-'+f[0]+'" data-field="'+f[0]+'" type="'+f[2]+'" '+(f[3]?'required ':'')+(editing&&f[0]===c.id?'disabled ':'')+'value="'+MiniERP.ui.escape(row&&row[f[0]]||'')+'"><div id="partner-'+f[0]+'-error" class="field-error" aria-live="polite"></div></div>'}).join('')+'</form>';
+    MiniERP.ui.modal({title:(editing?'Sửa ':'Thêm ')+c.singular,body:body,confirmLabel:editing?'Lưu thay đổi':'Tạo mới',onConfirm:function(){submitPartner(kind,row);return false}})
+  }
+
+  function submitPartner(kind,row){var c=configs[kind],form=document.getElementById('partnerForm'),values={},valid=true;form.querySelectorAll('[data-field]').forEach(function(input){values[input.dataset.field]=input.value.trim();var error=input.required&&!values[input.dataset.field]?'Không được để trống.':'';document.getElementById(input.id+'-error').textContent=error;input.setAttribute('aria-invalid',error?'true':'false');if(error)valid=false});if(!valid)return;var action=c.module+'.'+(row?'update':'create'),payload=row?{}:values;if(row){payload[c.id]=row[c.id];delete values[c.id];payload.patch=values}MiniERP.api.call(action,payload).then(function(){MiniERP.ui.closeModal();MiniERP.ui.toast({type:'success',title:'Đã lưu',message:'Danh mục đã được cập nhật.'});loadPartners(partnerSearch.value)}).catch(function(error){if(error.field){var fieldError=document.getElementById('partner-'+error.field+'-error');if(fieldError)fieldError.textContent=error.message}})}
+
+  function confirmDelete(kind,id){var c=configs[kind];MiniERP.ui.modal({title:'Xoá '+c.singular,body:'<p>Bản ghi sẽ được xoá mềm và không còn hiển thị trong danh mục.</p>',confirmLabel:'Xoá',danger:true,onConfirm:function(){MiniERP.api.call(c.module+'.delete',(function(){var p={};p[c.id]=id;return p})()).then(function(){MiniERP.ui.toast({type:'success',title:'Đã xoá',message:'Bản ghi đã được chuyển khỏi danh mục.'});loadPartners(partnerSearch.value)});return true}})}
+})();
+</script>

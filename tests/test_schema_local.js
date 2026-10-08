@@ -192,6 +192,9 @@ vm.runInContext(fs.readFileSync('src/lib_ai.gs', 'utf8'), context, { filename: '
 vm.runInContext(fs.readFileSync('src/api_warehouses.gs', 'utf8'), context, { filename: 'src/api_warehouses.gs' });
 vm.runInContext(fs.readFileSync('src/api_ledger.gs', 'utf8'), context, { filename: 'src/api_ledger.gs' });
 vm.runInContext(fs.readFileSync('src/api_settings.gs', 'utf8'), context, { filename: 'src/api_settings.gs' });
+vm.runInContext(fs.readFileSync('src/api_partners.gs', 'utf8'), context, { filename: 'src/api_partners.gs' });
+vm.runInContext(fs.readFileSync('src/api_items.gs', 'utf8'), context, { filename: 'src/api_items.gs' });
+vm.runInContext(fs.readFileSync('src/api_employees.gs', 'utf8'), context, { filename: 'src/api_employees.gs' });
 vm.runInContext(fs.readFileSync('src/Code.gs', 'utf8'), context, { filename: 'src/Code.gs' });
 
 const first = context.setup_schema();
@@ -352,6 +355,55 @@ context.update('Users', 'test@example.com', { role: 'director' });
 assert.equal(context.api({ action: 'settings.list', payload: {} }).error.code, 'FORBIDDEN');
 context.update('Users', 'test@example.com', { role: 'admin' });
 console.log('PASS local F-10 test: admin Settings save/list, read-only Counters, validation, sensitive audit');
+
+const customerCreate = context.api({ action: 'customer.create', payload: { cust_id: 'CUST-TEST-001', name: 'Khách hàng thử', tax_code: 'TAX-CUST-001', contact_name: 'Liên hệ A' } });
+assert.equal(customerCreate.ok, true);
+assert.equal(context.api({ action: 'customer.create', payload: { cust_id: 'CUST-TEST-002', name: 'Trùng thuế', tax_code: 'TAX-CUST-001' } }).error.code, 'CONFLICT');
+assert.equal(context.api({ action: 'customer.list', payload: { search: 'liên hệ a' } }).data.length, 1);
+assert.equal(context.api({ action: 'customer.update', payload: { cust_id: 'CUST-TEST-001', patch: { name: 'Khách hàng đã sửa' } } }).data.name, 'Khách hàng đã sửa');
+
+const supplierCreate = context.api({ action: 'supplier.create', payload: { sup_id: 'SUP-TEST-001', name: 'Nhà cung cấp thử', tax_code: 'TAX-SUP-001', payment_terms: 'Cọc 30%, còn lại net 15', avg_lead_days: 12 } });
+assert.equal(supplierCreate.ok, true);
+assert.equal(context.api({ action: 'supplier.update', payload: { sup_id: 'SUP-TEST-001', patch: { payment_terms: 'Net 30', avg_lead_days: 9 } } }).data.payment_terms, 'Net 30');
+assert.equal(context.api({ action: 'supplier.list', payload: { search: 'net 30' } }).data.length, 1);
+assert.equal(context.api({ action: 'supplier.create', payload: { sup_id: 'SUP-TEST-002', name: 'Lead lỗi', avg_lead_days: -1 } }).error.code, 'VALIDATION');
+const firstSeed = context.seed_sample_data();
+const secondSeed = context.seed_sample_data();
+assert.equal(firstSeed.customers.created.length, 2);
+assert.equal(firstSeed.suppliers.created.length, 2);
+assert.equal(secondSeed.customers.created.length, 0);
+assert.equal(secondSeed.suppliers.created.length, 0);
+assert.equal(firstSeed.items.created.length, 3);
+assert.equal(firstSeed.employees.created.length, 2);
+assert.equal(secondSeed.items.created.length, 0);
+assert.equal(secondSeed.employees.created.length, 0);
+assert.equal(context.api({ action: 'customer.delete', payload: { cust_id: 'CUST-TEST-001' } }).ok, true);
+assert.equal(context.api({ action: 'supplier.delete', payload: { sup_id: 'SUP-TEST-001' } }).ok, true);
+console.log('PASS local D-01/D-02 test: CRUD, search, duplicate tax, payment terms, lead-time, idempotent demo seed');
+
+const itemCreate = context.api({ action: 'item.create', payload: { sku: 'ITEM-TEST-001', name: 'Cảm biến thử', category: 'sensor', unit: 'cái', wh_type: 'common', barcode: 'BAR-001' } });
+assert.equal(itemCreate.ok, true);
+assert.equal(context.api({ action: 'item.list', payload: { search: 'BAR-001' } }).data.length, 1);
+assert.equal(context.api({ action: 'item.create', payload: { sku: 'ITEM-TEST-001', name: 'Trùng', unit: 'cái', wh_type: 'common' } }).error.code, 'CONFLICT');
+const bulkRows = Array.from({ length: 500 }, (_, index) => ({ sku: `BULK-${String(index + 1).padStart(3, '0')}`, name: `Vật tư ${index + 1}`, category: 'other', unit: 'cái', wh_type: 'common', barcode: `BULK-BAR-${index + 1}` }));
+const bulkStart = Date.now();
+assert.equal(context.api({ action: 'item.import_preview', payload: { rows: bulkRows } }).data.errors.length, 0);
+assert.equal(context.api({ action: 'item.import_commit', payload: { rows: bulkRows } }).data.created, 500);
+assert.ok(Date.now() - bulkStart < 30000);
+const invalidPreview = context.api({ action: 'item.import_preview', payload: { rows: [{ sku: 'BULK-001', name: '', unit: 'cái', wh_type: 'common' }] } }).data;
+assert.equal(invalidPreview.errors[0].row, 2);
+console.log('PASS local D-03 test: CRUD, barcode search, 500-row import, row errors, unique SKU');
+
+context.update('Users', 'test@example.com', { role: 'hr', emp_id: 'EMP-DEMO-001' });
+assert.equal(context.api({ action: 'employee.get', payload: { emp_id: 'EMP-DEMO-001' } }).data.id_card_no, '079123456312');
+const reveal = context.api({ action: 'employee.reveal', payload: { emp_id: 'EMP-DEMO-001', field: 'id_card_no' } });
+assert.equal(reveal.data.value, '079123456312');
+assert.equal(context.readAll('AuditLog').filter((row) => row.action === 'employee.reveal').length, 1);
+context.update('Users', 'test@example.com', { role: 'manager' });
+assert.equal(context.api({ action: 'employee.get', payload: { emp_id: 'EMP-DEMO-001' } }).data.id_card_no, '079•••••••312');
+assert.equal(context.api({ action: 'employee.reveal', payload: { emp_id: 'EMP-DEMO-001', field: 'id_card_no' } }).error.code, 'FORBIDDEN');
+context.update('Users', 'test@example.com', { role: 'admin' });
+console.log('PASS local H-01 test: employee list/detail, role masking, reveal audit');
 
 propertyValues.set('GEMINI_API_KEY', 'test-key');
 let aiFetchCount = 0;
