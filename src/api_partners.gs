@@ -90,7 +90,30 @@ function seed_sample_data() {
       { emp_id: 'EMP-DEMO-001', id_card_no: '079123456312', tax_code: 'DEMO-TAX-EMP-001' },
       { emp_id: 'EMP-DEMO-002', id_card_no: '079987654321', tax_code: 'DEMO-TAX-EMP-002' }
     ];
-    return { customers: seedRowsIfMissing_('Customers', customers), suppliers: seedRowsIfMissing_('Suppliers', suppliers), items: seedRowsIfMissing_('Items', items), employees: seedRowsIfMissing_('Employees', employees), employee_sensitive: seedRowsIfMissing_('EmployeeSensitive', sensitive) };
+    var projects = [{ project_id: 'DA-DEMO-001', name: 'Máy đóng gói Demo', cust_id: 'CUST-DEMO-001', contract_value_vnd: 480000000, start_date: '2026-10-01', due_date: '2027-01-31', pm_emp_id: 'EMP-DEMO-001', budget_vnd: 350000000, status: 'active', note: 'Dữ liệu mẫu kiểm thử' }];
+    var payments = [
+      { pay_id: 'DA-DEMO-001-PAY-1', project_id: 'DA-DEMO-001', seq: 1, name: 'Tạm ứng', percent: 30, amount_vnd: 144000000, due_date: '2026-10-15', status: 'pending' },
+      { pay_id: 'DA-DEMO-001-PAY-2', project_id: 'DA-DEMO-001', seq: 2, name: 'Giao hàng', percent: 50, amount_vnd: 240000000, due_date: '2026-12-20', status: 'pending' },
+      { pay_id: 'DA-DEMO-001-PAY-3', project_id: 'DA-DEMO-001', seq: 3, name: 'Nghiệm thu', percent: 20, amount_vnd: 96000000, due_date: '2027-01-31', status: 'pending' }
+    ];
+    var skills = [{ id: 'SKILL-DEMO-001', emp_id: 'EMP-DEMO-001', skill: 'PLC', level: 'advanced' }];
+    var certs = [{ id: 'CERT-DEMO-001', emp_id: 'EMP-DEMO-001', name: 'An toàn điện', issued_date: '2026-01-01', expiry_date: '2027-01-01', file_url: '' }];
+    var bom = [
+      { bom_id: 'BOM-DEMO-001', project_id: 'DA-DEMO-001', sku: 'PLC-DEMO-001', qty_required: 2, need_date: '2026-11-15', qty_reserved: 1, qty_ordered: 0, qty_issued: 0, note: 'Tủ điều khiển chính' },
+      { bom_id: 'BOM-DEMO-002', project_id: 'DA-DEMO-001', sku: 'SERVO-DEMO-001', qty_required: 4, need_date: '2026-12-01', qty_reserved: 0, qty_ordered: 2, qty_issued: 0, note: 'Cụm kéo màng' },
+      { bom_id: 'BOM-DEMO-003', project_id: 'DA-DEMO-001', sku: 'SENSOR-DEMO-001', qty_required: 8, need_date: '2026-11-20', qty_reserved: 2, qty_ordered: 0, qty_issued: 4, note: 'Cảm biến kiểm tra' }
+    ];
+    var costs = [{ id: 'COST-DEMO-001', project_id: 'DA-DEMO-001', kind: 'other', amount_vnd: 2500000, ref_type: 'demo', ref_id: 'DEMO', ts: '2026-10-08T00:00:00+07:00' }];
+    var stock = [
+      { sku: 'PLC-DEMO-001', wh_id: 'WH-COMMON', qty_on_hand: 5, qty_reserved: 1 },
+      { sku: 'SERVO-DEMO-001', wh_id: 'WH-COMMON', qty_on_hand: 2, qty_reserved: 0 },
+      { sku: 'SENSOR-DEMO-001', wh_id: 'WH-CONSUMABLE', qty_on_hand: 12, qty_reserved: 2 }
+    ];
+    var reservations = [
+      { res_id: 'RES-DEMO-001', project_id: 'DA-DEMO-001', sku: 'PLC-DEMO-001', wh_id: 'WH-COMMON', qty: 1, status: 'active' },
+      { res_id: 'RES-DEMO-002', project_id: 'DA-DEMO-001', sku: 'SENSOR-DEMO-001', wh_id: 'WH-CONSUMABLE', qty: 2, status: 'active' }
+    ];
+    return { customers: seedRowsIfMissing_('Customers', customers), suppliers: seedRowsIfMissing_('Suppliers', suppliers), items: seedRowsIfMissing_('Items', items), employees: seedRowsIfMissing_('Employees', employees), employee_sensitive: seedRowsIfMissing_('EmployeeSensitive', sensitive), projects: seedRowsIfMissing_('Projects', projects), payments: seedRowsIfMissing_('ProjectPayments', payments), skills: seedRowsIfMissing_('EmployeeSkills', skills), certificates: seedRowsIfMissing_('EmployeeCerts', certs), bom: seedRowsIfMissing_('BOM', bom), project_costs: seedRowsIfMissing_('ProjectCosts', costs), stock: seedRowsIfMissing_('StockBalance', stock), reservations: seedRowsIfMissing_('StockReservations', reservations) };
   });
 }
 

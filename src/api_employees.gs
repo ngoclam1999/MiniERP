@@ -56,6 +56,10 @@ function shapeEmployee_(ctx, row, detailed) {
   result.id_card_no = privileged ? String(sensitive.id_card_no || '') : maskSensitive_(sensitive.id_card_no);
   result.bank_account = privileged ? String(row.bank_account || '') : maskSensitive_(row.bank_account);
   if (detailed && privileged) result.tax_code = String(sensitive.tax_code || '');
+  if (detailed) {
+    result.skills = query('EmployeeSkills', function (item) { return String(item.emp_id) === String(row.emp_id); });
+    result.certificates = query('EmployeeCerts', function (item) { return String(item.emp_id) === String(row.emp_id); });
+  }
   if (hasRole_(ctx, 'manager') && !privileged) ['dob','address','insurance_no','bank_name','emergency_name','emergency_phone'].forEach(function (field) { delete result[field]; });
   return result;
 }

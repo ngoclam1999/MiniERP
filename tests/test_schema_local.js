@@ -195,6 +195,10 @@ vm.runInContext(fs.readFileSync('src/api_settings.gs', 'utf8'), context, { filen
 vm.runInContext(fs.readFileSync('src/api_partners.gs', 'utf8'), context, { filename: 'src/api_partners.gs' });
 vm.runInContext(fs.readFileSync('src/api_items.gs', 'utf8'), context, { filename: 'src/api_items.gs' });
 vm.runInContext(fs.readFileSync('src/api_employees.gs', 'utf8'), context, { filename: 'src/api_employees.gs' });
+vm.runInContext(fs.readFileSync('src/api_hr_skills.gs', 'utf8'), context, { filename: 'src/api_hr_skills.gs' });
+vm.runInContext(fs.readFileSync('src/api_projects.gs', 'utf8'), context, { filename: 'src/api_projects.gs' });
+vm.runInContext(fs.readFileSync('src/api_bom_costs.gs', 'utf8'), context, { filename: 'src/api_bom_costs.gs' });
+vm.runInContext(fs.readFileSync('src/api_stock.gs', 'utf8'), context, { filename: 'src/api_stock.gs' });
 vm.runInContext(fs.readFileSync('src/Code.gs', 'utf8'), context, { filename: 'src/Code.gs' });
 
 const first = context.setup_schema();
@@ -404,6 +408,69 @@ assert.equal(context.api({ action: 'employee.get', payload: { emp_id: 'EMP-DEMO-
 assert.equal(context.api({ action: 'employee.reveal', payload: { emp_id: 'EMP-DEMO-001', field: 'id_card_no' } }).error.code, 'FORBIDDEN');
 context.update('Users', 'test@example.com', { role: 'admin' });
 console.log('PASS local H-01 test: employee list/detail, role masking, reveal audit');
+
+context.update('Users', 'test@example.com', { role: 'hr' });
+assert.equal(context.api({ action: 'skill.upsert', payload: { emp_id: 'EMP-DEMO-001', skill: 'PLC', level: 'advanced' } }).ok, true);
+assert.equal(context.api({ action: 'skill.upsert', payload: { emp_id: 'EMP-DEMO-001', skill: 'PLC', level: 'expert' } }).data.level, 'expert');
+assert.equal(context.api({ action: 'cert.add', payload: { emp_id: 'EMP-DEMO-001', name: 'An toàn điện', issued_date: '2026-01-01', expiry_date: '2026-10-10', file_url: 'https://drive.google.com/demo' } }).ok, true);
+assert.equal(context.api({ action: 'cert.list_expiring', payload: { days: 60 } }).data.length, 1);
+assert.equal(context.scanCertificateExpiryAlerts().created, 1);
+assert.equal(context.scanCertificateExpiryAlerts().created, 0);
+console.log('PASS local H-02 test: skill upsert, certificate Drive URL, expiry list and idempotent alert');
+
+context.update('Users', 'test@example.com', { role: 'admin', emp_id: 'EMP-DEMO-001' });
+const project = context.api({ action: 'project.create', payload: { name: 'Máy đóng gói Demo', cust_id: 'CUST-DEMO-001', contract_value_vnd: 100000000, start_date: '2026-10-08', due_date: '2027-01-31', pm_emp_id: 'EMP-DEMO-001', budget_vnd: 70000000, status: 'active' } });
+assert.equal(project.ok, true);
+assert.equal(project.data.payments.length, 3);
+assert.equal(project.data.payments.reduce((sum, line) => sum + Number(line.percent), 0), 100);
+const badPlan = project.data.payments.map((line, i) => ({ pay_id: line.pay_id, name: line.name, percent: [40, 40, 30][i] }));
+assert.equal(context.api({ action: 'payment.update_plan', payload: { project_id: project.data.project_id, lines: badPlan } }).error.field, 'percent');
+const goodPlan = project.data.payments.map((line, i) => ({ pay_id: line.pay_id, name: line.name, percent: [40, 40, 20][i] }));
+assert.equal(context.api({ action: 'payment.update_plan', payload: { project_id: project.data.project_id, lines: goodPlan } }).ok, true);
+assert.equal(context.api({ action: 'project.list', payload: {} }).data[0].progress_pct, 0);
+console.log('PASS local B-01/B-02/B-03 test: project CRUD/detail UI data, generated ID, default and validated payment plan');
+
+const bomAdd = context.api({ action: 'bom.add_line', payload: { project_id: project.data.project_id, sku: 'PLC-DEMO-001', qty_required: 5, need_date: '2026-11-15', note: 'Dòng thử' } });
+assert.equal(bomAdd.ok, true);
+assert.equal(bomAdd.data.qty_short, 5);
+assert.equal(context.api({ action: 'bom.update_line', payload: { bom_id: bomAdd.data.bom_id, patch: { qty_reserved: 3, qty_ordered: 3 } } }).error.field, 'qty_required');
+const previewBom = context.api({ action: 'bom.import_preview', payload: { duplicate_mode: 'sum', rows: [
+  { sku: 'PLC-DEMO-001', qty_required: 2, need_date: '2026-12-01' },
+  { sku: 'PLC-DEMO-001', qty_required: 3, need_date: '2026-12-01' },
+  { sku: 'UNKNOWN', qty_required: 1, need_date: '2026-12-01' },
+  { sku: 'SERVO-DEMO-001', qty_required: -1, need_date: '2026-12-01' }
+] } }).data;
+assert.equal(previewBom.errors.length, 2);
+assert.equal(Number(previewBom.valid_rows[0].qty_required), 5);
+assert.equal(context.api({ action: 'bom.import_commit', payload: { project_id: project.data.project_id, rows: previewBom.valid_rows } }).data.created, 1);
+assert.equal(context.api({ action: 'bom.list', payload: { project_id: project.data.project_id } }).data.length, 2);
+context.insert('ProjectCosts', { id: 'COST-TEST-001', project_id: project.data.project_id, kind: 'material', amount_vnd: 17200000 });
+const cost = context.api({ action: 'project.cost', payload: { project_id: project.data.project_id } }).data;
+assert.equal(cost.material, 17200000);
+assert.equal(cost.actual, 17200000);
+assert.equal(cost.gross_margin, 82800000);
+console.log('PASS local B-04/B-05/B-06/B-07 test: BOM invariants/import/status data and project cost aggregation');
+
+context.api({ action: 'stock.receive', payload: { sku: 'ITEM-TEST-001', wh_id: 'WH-COMMON', qty: 5, unit_cost_vnd: 100000 } });
+const projectB = context.api({ action: 'project.create', payload: { name: 'Máy thử B', cust_id: 'CUST-DEMO-001', contract_value_vnd: 50000000, start_date: '2026-10-08', due_date: '2027-02-28', pm_emp_id: 'EMP-DEMO-001', status: 'active' } }).data;
+context.api({ action: 'bom.add_line', payload: { project_id: project.data.project_id, sku: 'ITEM-TEST-001', qty_required: 2, need_date: '2026-11-01' } });
+context.api({ action: 'bom.add_line', payload: { project_id: projectB.project_id, sku: 'ITEM-TEST-001', qty_required: 4, need_date: '2026-12-01' } });
+assert.ok(context.api({ action: 'bom.reconcile', payload: { project_id: project.data.project_id } }).data.reservations_created >= 1);
+assert.equal(context.activeReservedQty_(project.data.project_id, 'ITEM-TEST-001'), 2);
+assert.equal(context.api({ action: 'bom.reconcile', payload: { project_id: projectB.project_id } }).data.prs_created, 1);
+const stockBeforeRepeat = context.readAll('StockReservations').length;
+context.api({ action: 'bom.reconcile', payload: { project_id: projectB.project_id } });
+assert.equal(context.readAll('StockReservations').length, stockBeforeRepeat);
+assert.equal(context.api({ action: 'stock.list', payload: { search: 'ITEM-TEST-001' } }).data[0].available, 0);
+const issue = context.api({ action: 'issue.create', payload: { project_id: project.data.project_id, lines: [{ sku: 'ITEM-TEST-001', qty: 2 }] } }).data;
+assert.equal(context.api({ action: 'issue.post', payload: { px_id: issue.px_id } }).ok, true);
+assert.equal(context.findById('StockBalance', 'ITEM-TEST-001').qty_on_hand, 3);
+const rejectedIssue = context.api({ action: 'issue.create', payload: { project_id: project.data.project_id, lines: [{ sku: 'ITEM-TEST-001', qty: 1 }] } }).data;
+assert.equal(context.api({ action: 'issue.post', payload: { px_id: rejectedIssue.px_id } }).error.code, 'STOCK_NOT_RESERVED');
+assert.equal(context.api({ action: 'issue.cancel', payload: { px_id: issue.px_id } }).ok, true);
+assert.equal(context.findById('StockBalance', 'ITEM-TEST-001').qty_on_hand, 5);
+assert.equal(context.api({ action: 'stock.adjust', payload: { sku: 'ITEM-TEST-001', wh_id: 'WH-COMMON', qty: -10 } }).error.code, 'STOCK_INSUFFICIENT');
+console.log('PASS local K-01/K-02/K-03/K-04 test: stock core, idempotent reconcile, stock view data, issue/reversal');
 
 propertyValues.set('GEMINI_API_KEY', 'test-key');
 let aiFetchCount = 0;

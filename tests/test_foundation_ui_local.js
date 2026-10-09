@@ -10,6 +10,9 @@ const client = read('src/js_client.html');
 const enhancements = read('src/js_foundation_enhancements.html');
 const settings = read('src/js_settings.html');
 const partners = read('src/js_partners.html');
+const catalogHr = read('src/js_catalog_hr.html');
+const projects = read('src/js_projects.html');
+const stock = read('src/js_stock.html');
 
 function check(condition, message) {
   if (!condition) throw new Error(message);
@@ -44,8 +47,18 @@ check(partners.includes("suppliers:{title:'Nhà cung cấp'"), 'Thiếu màn hì
 check(partners.includes("c.module+'.list'"), 'Danh mục chưa gọi API tìm kiếm.');
 check(partners.includes("MiniERP.ui.modal"), 'Form danh mục chưa dùng modal trong trang.');
 check(partners.includes('sequence!==requestSequence||requestKind!==currentKind'), 'Danh mục chưa chặn response cũ khi đổi màn hình.');
+check(index.includes("include('src/js_stock')"), 'Index chưa include màn hình tồn kho.');
+check(stock.includes("MiniERP.api.call('stock.list'"), 'Màn hình kho chưa tải tồn kho.');
+check(stock.includes("MiniERP.api.call('stock.card'"), 'Màn hình kho chưa có thẻ kho.');
+check(projects.includes("MiniERP.api.call('customer.list'"), 'Form dự án chưa gợi ý khách hàng hiện có.');
+check(projects.includes("href=\"#customers\""), 'Form dự án thiếu liên kết tạo khách hàng trước.');
+check(projects.includes("MiniERP.api.call('employee.list'"), 'Form dự án chưa gợi ý QLDA hiện có.');
+check(projects.includes("href=\"#employees\""), 'Form dự án thiếu liên kết tạo nhân viên trước.');
+check(projects.includes("MiniERP.api.call('item.list'"), 'Form BOM chưa gợi ý vật tư hiện có.');
+check(catalogHr.includes("MiniERP.api.call('supplier.list'"), 'Form vật tư chưa gợi ý nhà cung cấp hiện có.');
 
 console.log('PASS local F-08 test: shared components, Style Guide, no native dialogs');
 console.log('PASS local F-09 test: Promise client, normalized errors, LOCK_TIMEOUT retry');
 console.log('PASS local F-10 UI test: admin settings form and read-only counters');
 console.log('PASS local D-01/D-02 UI test: customer and supplier CRUD screens');
+console.log('PASS local K-03/reference UI test: stock screen and linked-record suggestions');

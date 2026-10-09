@@ -14,6 +14,28 @@
 - Che CCCD và số tài khoản đối với vai trò ngoài `hr/admin`; mọi lần mở dữ liệu nhạy cảm được ghi AuditLog mà không ghi giá trị.
 - Thêm màn hình danh sách/chi tiết nhân viên và dữ liệu mẫu an toàn để kiểm thử.
 
+### H-02, B-01, B-02, B-03
+
+- Thêm kỹ năng, chứng chỉ, liên kết tệp Drive, danh sách sắp hết hạn và bộ quét cảnh báo chống trùng.
+- Thêm CRUD dự án, mã dự án tự sinh, tính tiến độ từ trạng thái task và kiểm tra quyền truy cập dự án.
+- Thêm màn hình danh sách/chi tiết dự án với các tab Hồ sơ, BOM, Công việc, Thanh toán và Giá thành.
+- Tạo mặc định kế hoạch thanh toán 30/50/20; khi sửa bắt buộc tổng tỷ lệ bằng 100%.
+
+### B-04, B-05, B-06, B-07
+
+- Thêm CRUD BOM và bất biến không cho tổng giữ chỗ, đặt mua, đã xuất vượt số lượng yêu cầu.
+- Thêm nhập BOM xem trước từ Excel/CSV, báo lỗi theo dòng, cộng dồn/bỏ qua dòng trùng và giới hạn 500 dòng.
+- Thêm bảng trạng thái BOM, chip ưu tiên, thanh phân bổ và bộ dữ liệu mẫu.
+- Thêm API giá thành dự án tổng hợp vật tư, OT, công tác, khác, cam kết, ngân sách và biên gộp.
+
+### K-01, K-02, K-03, K-04
+
+- Thêm lõi tồn kho: nhập, giữ chỗ, giải phóng, điều chỉnh và thẻ kho; chặn `on_hand`/`reserved` âm hoặc bất hợp lệ.
+- Thêm đối soát BOM theo ngày cần, giữ chỗ từ tồn khả dụng và tạo/cập nhật PR thiếu theo cách idempotent.
+- Thêm màn hình tồn kho với ba chỉ số, cảnh báo, lọc kho/tìm kiếm và thẻ giao dịch.
+- Thêm phiếu xuất theo dự án, kiểm tra giữ chỗ, ghi giá thành và huỷ bằng bút toán đảo.
+- Các trường liên kết dùng danh sách gợi ý và liên kết chuyển nhanh sang màn hình tạo Khách hàng, Nhân viên, Nhà cung cấp hoặc Vật tư.
+
 ## 2026-10-06
 
 ### F-01 Dựng dự án Apps Script

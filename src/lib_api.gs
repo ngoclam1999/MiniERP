@@ -113,6 +113,10 @@ function ensureApiActionsRegistered_() {
   if (typeof registerPartnerActions_ === 'function') registerPartnerActions_();
   if (typeof registerItemActions_ === 'function') registerItemActions_();
   if (typeof registerEmployeeActions_ === 'function') registerEmployeeActions_();
+  if (typeof registerHrSkillActions_ === 'function') registerHrSkillActions_();
+  if (typeof registerProjectActions_ === 'function') registerProjectActions_();
+  if (typeof registerBomCostActions_ === 'function') registerBomCostActions_();
+  if (typeof registerStockActions_ === 'function') registerStockActions_();
 }
 
 function validateApiRequest_(request) {
@@ -147,9 +151,20 @@ function buildApiSuccess_(result) {
   if (result && Object.prototype.toString.call(result) === '[object Object]' &&
       Object.prototype.hasOwnProperty.call(result, 'data') &&
       Object.prototype.hasOwnProperty.call(result, 'meta')) {
-    return { ok: true, data: result.data, meta: result.meta };
+    return { ok: true, data: toApiSafeValue_(result.data), meta: toApiSafeValue_(result.meta) };
   }
-  return { ok: true, data: result === undefined ? null : result };
+  return { ok: true, data: result === undefined ? null : toApiSafeValue_(result) };
+}
+
+function toApiSafeValue_(value) {
+  if (Object.prototype.toString.call(value) === '[object Date]') return Utilities.formatDate(value, 'Asia/Bangkok', 'yyyy-MM-dd');
+  if (Array.isArray(value)) return value.map(toApiSafeValue_);
+  if (value && Object.prototype.toString.call(value) === '[object Object]') {
+    var result = {};
+    Object.keys(value).forEach(function (key) { result[key] = toApiSafeValue_(value[key]); });
+    return result;
+  }
+  return value;
 }
 
 function buildApiFailure_(error) {

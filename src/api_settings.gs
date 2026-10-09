@@ -5,7 +5,8 @@ var MINI_ERP_SETTINGS_KEYS = [
   'vietqr_account_no',
   'vietqr_account_name',
   'alert_soon_days',
-  'ai_scan_hour'
+  'ai_scan_hour',
+  'allow_consumable_without_reserve'
 ];
 
 function registerSettingsActions_() {
@@ -68,4 +69,5 @@ function validateSettingValue_(key, value) {
   if (key === 'ai_scan_hour') {
     if (!/^\d+$/.test(value) || Number(value) > 23) throw apiError('VALIDATION', 'Giờ quét AI phải từ 0 đến 23.', key);
   }
+  if (key === 'allow_consumable_without_reserve' && ['true','false'].indexOf(value) === -1) throw apiError('VALIDATION', 'Cấu hình phải là true hoặc false.', key);
 }

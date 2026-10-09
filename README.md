@@ -58,7 +58,7 @@ Tài khoản có quyền `settings` mở `#style-guide` để xem bảng, chip, 
 
 Trang `#settings` dành riêng cho admin. Thay đổi Settings được ghi trực tiếp vào Google Sheets và có hiệu lực ngay; Counters chỉ hiển thị để theo dõi, không cho sửa từ giao diện.
 
-Chạy `seed_sample_data()` trong Apps Script editor để bổ sung dữ liệu mẫu Khách hàng, Nhà cung cấp, Vật tư và Nhân viên. Hàm chỉ thêm các mã `DEMO` còn thiếu nên có thể chạy lại an toàn.
+Chạy `seed_sample_data()` trong Apps Script editor để bổ sung dữ liệu mẫu Khách hàng, Nhà cung cấp, Vật tư, Nhân viên, kỹ năng/chứng chỉ và Dự án với kế hoạch thanh toán. Hàm chỉ thêm các mã `DEMO` còn thiếu nên có thể chạy lại an toàn.
 
 Trang `#items` hỗ trợ tạo/sửa, tìm theo mã vạch và nhập tối đa 1.000 dòng mỗi lần bằng dữ liệu dán trực tiếp từ Excel (TSV) hoặc file CSV. Bước xem trước báo lỗi theo dòng và chỉ cho ghi khi toàn bộ dữ liệu hợp lệ.
 
