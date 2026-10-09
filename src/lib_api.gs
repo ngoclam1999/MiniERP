@@ -117,6 +117,7 @@ function ensureApiActionsRegistered_() {
   if (typeof registerProjectActions_ === 'function') registerProjectActions_();
   if (typeof registerBomCostActions_ === 'function') registerBomCostActions_();
   if (typeof registerStockActions_ === 'function') registerStockActions_();
+  if (typeof registerProcurementActions_ === 'function') registerProcurementActions_();
 }
 
 function validateApiRequest_(request) {

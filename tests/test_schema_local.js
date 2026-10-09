@@ -199,6 +199,7 @@ vm.runInContext(fs.readFileSync('src/api_hr_skills.gs', 'utf8'), context, { file
 vm.runInContext(fs.readFileSync('src/api_projects.gs', 'utf8'), context, { filename: 'src/api_projects.gs' });
 vm.runInContext(fs.readFileSync('src/api_bom_costs.gs', 'utf8'), context, { filename: 'src/api_bom_costs.gs' });
 vm.runInContext(fs.readFileSync('src/api_stock.gs', 'utf8'), context, { filename: 'src/api_stock.gs' });
+vm.runInContext(fs.readFileSync('src/api_procurement.gs', 'utf8'), context, { filename: 'src/api_procurement.gs' });
 vm.runInContext(fs.readFileSync('src/Code.gs', 'utf8'), context, { filename: 'src/Code.gs' });
 
 const first = context.setup_schema();
@@ -379,8 +380,14 @@ assert.equal(secondSeed.customers.created.length, 0);
 assert.equal(secondSeed.suppliers.created.length, 0);
 assert.equal(firstSeed.items.created.length, 3);
 assert.equal(firstSeed.employees.created.length, 2);
+assert.equal(firstSeed.prs.created.length, 3);
+assert.equal(firstSeed.pos.created.length, 2);
+assert.equal(firstSeed.po_lines.created.length, 2);
 assert.equal(secondSeed.items.created.length, 0);
 assert.equal(secondSeed.employees.created.length, 0);
+assert.equal(secondSeed.prs.created.length, 0);
+assert.equal(secondSeed.pos.created.length, 0);
+assert.equal(secondSeed.po_lines.created.length, 0);
 assert.equal(context.api({ action: 'customer.delete', payload: { cust_id: 'CUST-TEST-001' } }).ok, true);
 assert.equal(context.api({ action: 'supplier.delete', payload: { sup_id: 'SUP-TEST-001' } }).ok, true);
 console.log('PASS local D-01/D-02 test: CRUD, search, duplicate tax, payment terms, lead-time, idempotent demo seed');
@@ -432,7 +439,9 @@ console.log('PASS local B-01/B-02/B-03 test: project CRUD/detail UI data, genera
 
 const bomAdd = context.api({ action: 'bom.add_line', payload: { project_id: project.data.project_id, sku: 'PLC-DEMO-001', qty_required: 5, need_date: '2026-11-15', note: 'Dòng thử' } });
 assert.equal(bomAdd.ok, true);
-assert.equal(bomAdd.data.qty_short, 5);
+assert.equal(bomAdd.data.qty_short, 1);
+assert.equal(bomAdd.data.reconciliation.reservations_created, 1);
+assert.equal(bomAdd.data.reconciliation.prs_created, 1);
 assert.equal(context.api({ action: 'bom.update_line', payload: { bom_id: bomAdd.data.bom_id, patch: { qty_reserved: 3, qty_ordered: 3 } } }).error.field, 'qty_required');
 const previewBom = context.api({ action: 'bom.import_preview', payload: { duplicate_mode: 'sum', rows: [
   { sku: 'PLC-DEMO-001', qty_required: 2, need_date: '2026-12-01' },
@@ -442,7 +451,9 @@ const previewBom = context.api({ action: 'bom.import_preview', payload: { duplic
 ] } }).data;
 assert.equal(previewBom.errors.length, 2);
 assert.equal(Number(previewBom.valid_rows[0].qty_required), 5);
-assert.equal(context.api({ action: 'bom.import_commit', payload: { project_id: project.data.project_id, rows: previewBom.valid_rows } }).data.created, 1);
+const importedBom = context.api({ action: 'bom.import_commit', payload: { project_id: project.data.project_id, rows: previewBom.valid_rows } }).data;
+assert.equal(importedBom.created, 1);
+assert.equal(context.readAll('PR').find((row) => row.project_id === project.data.project_id && row.sku === 'PLC-DEMO-001' && row.status === 'open').qty, 6);
 assert.equal(context.api({ action: 'bom.list', payload: { project_id: project.data.project_id } }).data.length, 2);
 context.insert('ProjectCosts', { id: 'COST-TEST-001', project_id: project.data.project_id, kind: 'material', amount_vnd: 17200000 });
 const cost = context.api({ action: 'project.cost', payload: { project_id: project.data.project_id } }).data;
@@ -453,11 +464,12 @@ console.log('PASS local B-04/B-05/B-06/B-07 test: BOM invariants/import/status d
 
 context.api({ action: 'stock.receive', payload: { sku: 'ITEM-TEST-001', wh_id: 'WH-COMMON', qty: 5, unit_cost_vnd: 100000 } });
 const projectB = context.api({ action: 'project.create', payload: { name: 'Máy thử B', cust_id: 'CUST-DEMO-001', contract_value_vnd: 50000000, start_date: '2026-10-08', due_date: '2027-02-28', pm_emp_id: 'EMP-DEMO-001', status: 'active' } }).data;
-context.api({ action: 'bom.add_line', payload: { project_id: project.data.project_id, sku: 'ITEM-TEST-001', qty_required: 2, need_date: '2026-11-01' } });
-context.api({ action: 'bom.add_line', payload: { project_id: projectB.project_id, sku: 'ITEM-TEST-001', qty_required: 4, need_date: '2026-12-01' } });
-assert.ok(context.api({ action: 'bom.reconcile', payload: { project_id: project.data.project_id } }).data.reservations_created >= 1);
+const autoReservedA = context.api({ action: 'bom.add_line', payload: { project_id: project.data.project_id, sku: 'ITEM-TEST-001', qty_required: 2, need_date: '2026-11-01' } });
+const autoReservedB = context.api({ action: 'bom.add_line', payload: { project_id: projectB.project_id, sku: 'ITEM-TEST-001', qty_required: 4, need_date: '2026-12-01' } });
+assert.equal(autoReservedA.data.reconciliation.reservations_created, 1);
+assert.equal(autoReservedB.data.reconciliation.reservations_created, 1);
+assert.equal(autoReservedB.data.reconciliation.prs_created, 1);
 assert.equal(context.activeReservedQty_(project.data.project_id, 'ITEM-TEST-001'), 2);
-assert.equal(context.api({ action: 'bom.reconcile', payload: { project_id: projectB.project_id } }).data.prs_created, 1);
 const stockBeforeRepeat = context.readAll('StockReservations').length;
 context.api({ action: 'bom.reconcile', payload: { project_id: projectB.project_id } });
 assert.equal(context.readAll('StockReservations').length, stockBeforeRepeat);
@@ -470,7 +482,50 @@ assert.equal(context.api({ action: 'issue.post', payload: { px_id: rejectedIssue
 assert.equal(context.api({ action: 'issue.cancel', payload: { px_id: issue.px_id } }).ok, true);
 assert.equal(context.findById('StockBalance', 'ITEM-TEST-001').qty_on_hand, 5);
 assert.equal(context.api({ action: 'stock.adjust', payload: { sku: 'ITEM-TEST-001', wh_id: 'WH-COMMON', qty: -10 } }).error.code, 'STOCK_INSUFFICIENT');
-console.log('PASS local K-01/K-02/K-03/K-04 test: stock core, idempotent reconcile, stock view data, issue/reversal');
+console.log('PASS local K-01/K-02/K-03/K-04 test: automatic/idempotent BOM reconcile, stock view data, issue/reversal');
+
+const projectBReservation = context.readAll('StockReservations').find((row) => row.project_id === projectB.project_id && row.sku === 'ITEM-TEST-001' && row.status === 'active');
+assert.equal(context.api({ action: 'stock.release', payload: { res_id: projectBReservation.res_id } }).ok, true);
+const stocktake = context.api({ action: 'stocktake.create', payload: { wh_id: 'WH-COMMON' } }).data;
+const countedLine = stocktake.lines.find((line) => line.sku === 'ITEM-TEST-001');
+assert.ok(countedLine);
+assert.equal(context.api({ action: 'stocktake.save_counts', payload: { kk_id: stocktake.kk_id, lines: stocktake.lines.map((line) => ({ line_id: line.line_id, qty_counted: line.sku === 'ITEM-TEST-001' ? 4 : line.qty_book, reason: '', project_id: '' })) } }).error.field, 'reason');
+const savedStocktake = context.api({ action: 'stocktake.save_counts', payload: { kk_id: stocktake.kk_id, lines: stocktake.lines.map((line) => ({ line_id: line.line_id, qty_counted: line.sku === 'ITEM-TEST-001' ? 4 : line.qty_book, reason: line.sku === 'ITEM-TEST-001' ? 'hư hỏng khi chế tạo' : '', project_id: line.sku === 'ITEM-TEST-001' ? project.data.project_id : '' })) } });
+assert.equal(savedStocktake.ok, true);
+assert.equal(context.api({ action: 'stocktake.approve', payload: { kk_id: stocktake.kk_id } }).ok, true);
+assert.equal(context.findById('StockBalance', 'ITEM-TEST-001').qty_on_hand, 4);
+assert.ok(context.readAll('ProjectCosts').some((row) => row.ref_type === 'stocktake' && row.ref_id === stocktake.kk_id));
+const blockedStocktake = context.api({ action: 'stocktake.create', payload: { wh_id: 'WH-COMMON' } }).data;
+assert.equal(context.api({ action: 'stocktake.save_counts', payload: { kk_id: blockedStocktake.kk_id, lines: blockedStocktake.lines.map((line) => ({ line_id: line.line_id, qty_counted: line.sku === 'ITEM-TEST-001' ? 1 : line.qty_book, reason: line.sku === 'ITEM-TEST-001' ? 'mất mát' : '', project_id: '' })) } }).ok, true);
+const blockedApproval = context.api({ action: 'stocktake.approve', payload: { kk_id: blockedStocktake.kk_id } });
+assert.equal(blockedApproval.error.code, 'STOCK_INSUFFICIENT');
+assert.ok(context.readAll('PR').some((row) => row.project_id === project.data.project_id && row.sku === 'ITEM-TEST-001' && row.status === 'open'));
+console.log('PASS local K-07 test: snapshot counts, negative reason, approval adjustment, cost and compensation PR');
+
+assert.equal(context.api({ action: 'bom.add_line', payload: { project_id: project.data.project_id, sku: 'SERVO-DEMO-001', qty_required: 5, need_date: '2026-12-01' } }).ok, true);
+const manualPr = context.api({ action: 'pr.create_manual', payload: { project_id: project.data.project_id, sku: 'SERVO-DEMO-001', qty: 2, need_date: '2026-12-01' } });
+assert.equal(manualPr.ok, true);
+assert.equal(manualPr.data.source, 'manual');
+const cancelledPr = context.api({ action: 'pr.create_manual', payload: { project_id: project.data.project_id, sku: 'SENSOR-DEMO-001', qty: 1, need_date: '2026-12-02' } }).data;
+assert.equal(context.api({ action: 'pr.cancel', payload: { pr_id: cancelledPr.pr_id } }).data.status, 'cancelled');
+assert.ok(context.api({ action: 'pr.list', payload: { status: 'open', search: 'SERVO-DEMO-001' } }).data.some((row) => row.pr_id === manualPr.data.pr_id));
+const po = context.api({ action: 'pr.to_po', payload: { pr_ids: [manualPr.data.pr_id], sup_id: 'SUP-DEMO-001' } });
+assert.equal(po.ok, true);
+assert.equal(po.data.status, 'draft');
+assert.equal(po.data.lines[0].pr_id, manualPr.data.pr_id);
+assert.equal(context.findById('PR', manualPr.data.pr_id).status, 'po_created');
+assert.equal(context.api({ action: 'po.confirm', payload: { po_id: po.data.po_id } }).error.code, 'INVALID_STATE');
+const editedPo = context.api({ action: 'po.update', payload: { po_id: po.data.po_id, patch: { lines: po.data.lines.map((line) => ({ ...line, unit_price_vnd: 2500000, lead_time_days: 12 })) } } });
+assert.equal(editedPo.data.total_vnd, 5000000);
+assert.equal(context.api({ action: 'po.send', payload: { po_id: po.data.po_id } }).data.status, 'sent');
+assert.equal(context.api({ action: 'po.confirm', payload: { po_id: po.data.po_id } }).data.status, 'confirmed');
+const servoBom = context.readAll('BOM').find((row) => row.project_id === project.data.project_id && row.sku === 'SERVO-DEMO-001');
+assert.equal(Number(servoBom.qty_ordered), 2);
+assert.equal(context.api({ action: 'po.send', payload: { po_id: po.data.po_id } }).error.code, 'INVALID_STATE');
+assert.equal(context.api({ action: 'po.cancel', payload: { po_id: po.data.po_id } }).data.status, 'cancelled');
+assert.equal(Number(context.findById('BOM', servoBom.bom_id).qty_ordered), 0);
+assert.equal(context.findById('PR', manualPr.data.pr_id).status, 'open');
+console.log('PASS local M-01/M-02 test: PR lifecycle, PO grouping/edit/state machine, BOM ordered and cancellation reversal');
 
 propertyValues.set('GEMINI_API_KEY', 'test-key');
 let aiFetchCount = 0;

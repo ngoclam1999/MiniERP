@@ -140,3 +140,14 @@
 - Chặn trùng mã số thuế, lead-time âm và xoá nhà cung cấp đã phát sinh PO/công nợ.
 - Thêm `seed_sample_data()` idempotent với hai khách hàng và hai nhà cung cấp mang mã `DEMO`.
 
+# 2026-10-09
+
+- Sửa luồng BOM dự án mới: thêm dòng hoặc nhập hàng loạt tự động đối soát kho, tạo giữ chỗ và sinh/cập nhật PR; giao diện thông báo số giữ chỗ và PR vừa tạo.
+- Mở rộng `seed_sample_data()` với PR mở, PR đã tạo PO, PO nháp, PO đã xác nhận và dòng PO liên kết dự án/BOM để kiểm thử các luồng Kho và Mua hàng.
+- M-01: thêm API danh sách/tạo thủ công/huỷ PR, chuyển nhiều PR sang một PO và tab Yêu cầu mua có liên kết dữ liệu dự án, vật tư, nhà cung cấp.
+- M-02: thêm API tạo/sửa/gửi/xác nhận/huỷ/xem PO, máy trạng thái hợp lệ, chỉ cộng `BOM.qty_ordered` khi PO được xác nhận và đảo lại khi huỷ.
+- Thêm tab Đơn mua với chi tiết, sửa PO nháp và các thao tác trạng thái theo quyền mua hàng.
+- K-05: thêm tab Phiếu xuất trong màn hình Kho, gợi ý dự án và chỉ hiển thị vật tư đang được dự án giữ chỗ; hiển thị kết quả hoặc lỗi nghiệp vụ ngay trong form.
+- K-07: thêm API và giao diện kiểm kê gồm ảnh chụp tồn sổ, lưu số thực đếm, bắt buộc lý do khi thiếu, duyệt điều chỉnh, ghi chi phí hư hỏng theo dự án và tạo PR bù khi tồn sau kiểm kê thấp hơn lượng giữ chỗ.
+- Bổ sung `project_id` cho `StocktakeLines` để đáp ứng quy tắc ghi hao hụt vào giá thành dự án tại đặc tả §7.3.
+

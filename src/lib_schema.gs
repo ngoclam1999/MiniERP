@@ -33,7 +33,7 @@ var MINI_ERP_SCHEMA = {
   IssueNotes: ['px_id', 'project_id', 'ts', 'status'],
   IssueLines: ['line_id', 'px_id', 'sku', 'qty', 'unit_cost_vnd'],
   Stocktakes: ['kk_id', 'wh_id', 'date', 'status'],
-  StocktakeLines: ['line_id', 'kk_id', 'sku', 'qty_book', 'qty_counted', 'reason'],
+  StocktakeLines: ['line_id', 'kk_id', 'sku', 'qty_book', 'qty_counted', 'reason', 'project_id'],
 
   PR: ['pr_id', 'project_id', 'sku', 'qty', 'need_date', 'status', 'source'],
   PO: ['po_id', 'sup_id', 'order_date', 'payment_terms', 'currency', 'status', 'total_vnd'],

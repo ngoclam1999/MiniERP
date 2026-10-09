@@ -113,7 +113,20 @@ function seed_sample_data() {
       { res_id: 'RES-DEMO-001', project_id: 'DA-DEMO-001', sku: 'PLC-DEMO-001', wh_id: 'WH-COMMON', qty: 1, status: 'active' },
       { res_id: 'RES-DEMO-002', project_id: 'DA-DEMO-001', sku: 'SENSOR-DEMO-001', wh_id: 'WH-CONSUMABLE', qty: 2, status: 'active' }
     ];
-    return { customers: seedRowsIfMissing_('Customers', customers), suppliers: seedRowsIfMissing_('Suppliers', suppliers), items: seedRowsIfMissing_('Items', items), employees: seedRowsIfMissing_('Employees', employees), employee_sensitive: seedRowsIfMissing_('EmployeeSensitive', sensitive), projects: seedRowsIfMissing_('Projects', projects), payments: seedRowsIfMissing_('ProjectPayments', payments), skills: seedRowsIfMissing_('EmployeeSkills', skills), certificates: seedRowsIfMissing_('EmployeeCerts', certs), bom: seedRowsIfMissing_('BOM', bom), project_costs: seedRowsIfMissing_('ProjectCosts', costs), stock: seedRowsIfMissing_('StockBalance', stock), reservations: seedRowsIfMissing_('StockReservations', reservations) };
+    var prs = [
+      { pr_id: 'PR-DEMO-001', project_id: 'DA-DEMO-001', sku: 'PLC-DEMO-001', qty: 1, need_date: '2026-11-15', status: 'open', source: 'bom_auto' },
+      { pr_id: 'PR-DEMO-002', project_id: 'DA-DEMO-001', sku: 'SENSOR-DEMO-001', qty: 2, need_date: '2026-11-20', status: 'open', source: 'bom_auto' },
+      { pr_id: 'PR-DEMO-003', project_id: 'DA-DEMO-001', sku: 'SERVO-DEMO-001', qty: 2, need_date: '2026-12-01', status: 'po_created', source: 'bom_auto' }
+    ];
+    var pos = [
+      { po_id: 'PO-DEMO-001', sup_id: 'SUP-DEMO-001', order_date: '2026-10-08', payment_terms: 'Cọc 30%, còn lại net 15', currency: 'VND', status: 'confirmed', total_vnd: 25000000 },
+      { po_id: 'PO-DEMO-002', sup_id: 'SUP-DEMO-002', order_date: '2026-10-09', payment_terms: 'Net 30', currency: 'VND', status: 'draft', total_vnd: 650000 }
+    ];
+    var poLines = [
+      { line_id: 'PO-DEMO-001-1', po_id: 'PO-DEMO-001', sku: 'SERVO-DEMO-001', project_id: 'DA-DEMO-001', pr_id: 'PR-DEMO-003', qty: 2, unit_price_vnd: 12500000, lead_time_days: 21, eta_date: '2026-10-29', need_date: '2026-12-01', qty_received: 0 },
+      { line_id: 'PO-DEMO-002-1', po_id: 'PO-DEMO-002', sku: 'SENSOR-DEMO-001', project_id: 'DA-DEMO-001', pr_id: '', qty: 1, unit_price_vnd: 650000, lead_time_days: 7, eta_date: '2026-10-16', need_date: '2026-11-20', qty_received: 0 }
+    ];
+    return { customers: seedRowsIfMissing_('Customers', customers), suppliers: seedRowsIfMissing_('Suppliers', suppliers), items: seedRowsIfMissing_('Items', items), employees: seedRowsIfMissing_('Employees', employees), employee_sensitive: seedRowsIfMissing_('EmployeeSensitive', sensitive), projects: seedRowsIfMissing_('Projects', projects), payments: seedRowsIfMissing_('ProjectPayments', payments), skills: seedRowsIfMissing_('EmployeeSkills', skills), certificates: seedRowsIfMissing_('EmployeeCerts', certs), bom: seedRowsIfMissing_('BOM', bom), project_costs: seedRowsIfMissing_('ProjectCosts', costs), stock: seedRowsIfMissing_('StockBalance', stock), reservations: seedRowsIfMissing_('StockReservations', reservations), prs: seedRowsIfMissing_('PR', prs), pos: seedRowsIfMissing_('PO', pos), po_lines: seedRowsIfMissing_('POLines', poLines) };
   });
 }
 
