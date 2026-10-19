@@ -14,6 +14,7 @@ const catalogHr = read('src/js_catalog_hr.html');
 const projects = read('src/js_projects.html');
 const stock = read('src/js_stock.html');
 const purchasing = read('src/js_purchasing.html');
+const notifications = read('src/js_notifications.html');
 
 function check(condition, message) {
   if (!condition) throw new Error(message);
@@ -50,6 +51,7 @@ check(partners.includes("MiniERP.ui.modal"), 'Form danh mục chưa dùng modal 
 check(partners.includes('sequence!==requestSequence||requestKind!==currentKind'), 'Danh mục chưa chặn response cũ khi đổi màn hình.');
 check(index.includes("include('src/js_stock')"), 'Index chưa include màn hình tồn kho.');
 check(index.includes("include('src/js_purchasing')"), 'Index chưa include màn hình mua hàng.');
+check(index.includes("include('src/js_notifications')"), 'Z-02 thiếu module giao diện thông báo.');
 check(stock.includes("MiniERP.api.call('stock.list'"), 'Màn hình kho chưa tải tồn kho.');
 check(stock.includes("MiniERP.api.call('stock.card'"), 'Màn hình kho chưa có thẻ kho.');
 check(stock.includes("MiniERP.api.call('issue.create'"), 'K-05 thiếu form tạo phiếu xuất.');
@@ -66,6 +68,12 @@ check(purchasing.includes("MiniERP.api.call('po.update'"), 'M-02 thiếu sửa P
 check(purchasing.includes("'po.send'"), 'M-02 thiếu gửi PO.');
 check(purchasing.includes("'po.confirm'"), 'M-02 thiếu xác nhận PO.');
 check(purchasing.includes("'po.cancel'"), 'M-02 thiếu huỷ PO.');
+check(purchasing.includes("MiniERP.api.call('eta.update'"), 'M-03 thiếu form sửa ETA.');
+check(purchasing.includes('data-edit-eta'), 'M-03 thiếu thao tác sửa ETA trên dòng PO.');
+check(purchasing.includes('Lần sửa được ghi vào AuditLog'), 'M-03 thiếu thông báo lịch sử ETA.');
+check(notifications.includes("MiniERP.api.call('notification.list'"), 'Z-02 thiếu tải thông báo chưa đọc.');
+check(notifications.includes("MiniERP.api.call('notification.mark_read'"), 'Z-02 thiếu đánh dấu đã đọc.');
+check(notifications.includes('setInterval(loadNotifications,30000)'), 'Z-02 thiếu thăm dò 30 giây.');
 check(projects.includes("MiniERP.api.call('customer.list'"), 'Form dự án chưa gợi ý khách hàng hiện có.');
 check(projects.includes("href=\"#customers\""), 'Form dự án thiếu liên kết tạo khách hàng trước.');
 check(projects.includes("MiniERP.api.call('employee.list'"), 'Form dự án chưa gợi ý QLDA hiện có.');
@@ -80,4 +88,5 @@ console.log('PASS local F-10 UI test: admin settings form and read-only counters
 console.log('PASS local D-01/D-02 UI test: customer and supplier CRUD screens');
 console.log('PASS local K-03/reference UI test: stock screen and linked-record suggestions');
 console.log('PASS local K-05/K-07 UI test: project-aware issue form and stocktake workflow');
-console.log('PASS local M-01/M-02 UI test: PR and PO purchasing tabs with linked-record suggestions');
+console.log('PASS local M-01/M-02/M-03 UI test: PR/PO tabs, linked records and manual ETA editing');
+console.log('PASS local Z-02 UI test: notification bell, unread badge, mark-read and 30-second polling');

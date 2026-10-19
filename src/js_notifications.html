@@ -1,0 +1,59 @@
+<script>
+(function(){
+  'use strict';
+  var unread=[],pollTimer=null,baseSession=session;
+
+  session=function(response){
+    baseSession(response);
+    if(response&&response.ok){mountNotificationBell();loadNotifications();startPolling()}
+  };
+
+  function mountNotificationBell(){
+    if(document.getElementById('notificationWrap'))return;
+    var wrap=document.createElement('div');
+    wrap.id='notificationWrap';wrap.className='notification-wrap';
+    wrap.innerHTML='<button id="notificationBell" class="btn notification-button" type="button" aria-label="Thông báo" aria-expanded="false">🔔<span id="notificationBadge" class="notification-badge hidden">0</span></button><div id="notificationPanel" class="notification-panel hidden" role="region" aria-label="Thông báo chưa đọc"></div>';
+    document.querySelector('.actions').insertBefore(wrap,document.getElementById('theme'));
+    document.getElementById('notificationBell').onclick=function(event){event.stopPropagation();togglePanel()};
+    document.getElementById('notificationPanel').onclick=handleNotificationClick;
+  }
+
+  function startPolling(){
+    if(pollTimer)clearInterval(pollTimer);
+    pollTimer=setInterval(loadNotifications,30000);
+  }
+
+  function loadNotifications(){
+    MiniERP.api.call('notification.list',{}, {silent:true}).then(function(response){
+      unread=response.data||[];renderNotifications();
+    }).catch(function(){return null});
+  }
+
+  function renderNotifications(){
+    var badge=document.getElementById('notificationBadge'),panel=document.getElementById('notificationPanel');
+    if(!badge||!panel)return;
+    badge.textContent=unread.length>99?'99+':String(unread.length);
+    badge.classList.toggle('hidden',unread.length===0);
+    panel.innerHTML=unread.length?unread.map(function(x){return '<button class="notification-item" type="button" data-notification="'+MiniERP.ui.escape(x.id)+'" data-link="'+MiniERP.ui.escape(x.link||'')+'"><b>'+MiniERP.ui.escape(x.title||'Thông báo')+'</b><span>'+MiniERP.ui.escape(x.body||'')+'</span></button>'}).join(''):'<div class="notification-empty">Không có thông báo chưa đọc.</div>';
+  }
+
+  function togglePanel(){
+    var panel=document.getElementById('notificationPanel'),bell=document.getElementById('notificationBell'),opening=panel.classList.contains('hidden');
+    panel.classList.toggle('hidden',!opening);bell.setAttribute('aria-expanded',String(opening));
+  }
+
+  function handleNotificationClick(event){
+    var item=event.target.closest('[data-notification]');if(!item)return;
+    MiniERP.api.call('notification.mark_read',{id:item.dataset.notification},{silent:true}).then(function(){
+      unread=unread.filter(function(x){return String(x.id)!==String(item.dataset.notification)});renderNotifications();
+      document.getElementById('notificationPanel').classList.add('hidden');document.getElementById('notificationBell').setAttribute('aria-expanded','false');
+      if(item.dataset.link&&item.dataset.link.charAt(0)==='#')location.hash=item.dataset.link;
+    });
+  }
+
+  document.addEventListener('click',function(event){
+    var wrap=document.getElementById('notificationWrap');if(!wrap||wrap.contains(event.target))return;
+    document.getElementById('notificationPanel').classList.add('hidden');document.getElementById('notificationBell').setAttribute('aria-expanded','false');
+  });
+})();
+</script>

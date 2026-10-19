@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## 2026-10-17
+
+### M-03 Dòng PO và ETA
+
+- Tự tính `eta_date = order_date + lead_time_days` khi tạo hoặc sửa PO; mặc định lead-time tiếp tục lấy từ danh mục vật tư.
+- Thêm `eta.list` để trả dữ liệu ETA theo dự án/trạng thái/tìm kiếm và phân loại đúng hạn, sắp trễ, trễ hoặc đã nhận.
+- Thêm `eta.update` cho mua hàng sửa ETA thủ công; bắt buộc lý do, lưu `eta_source`/`eta_note` và ghi lịch sử before/after qua AuditLog.
+- Hiển thị ETA và nguồn ETA trong chi tiết PO, kèm form sửa ETA không dùng hộp thoại native.
+
+### Z-02 Thông báo trong ứng dụng và email
+
+- Thêm API đọc thông báo chưa xem của chính tài khoản đăng nhập và đánh dấu đã đọc có kiểm tra chủ sở hữu.
+- Thêm chuông thông báo, huy hiệu số lượng, danh sách điều hướng theo liên kết và tự làm mới mỗi 30 giây.
+- `createNotification` gửi thêm email khi `to_user` là địa chỉ email hợp lệ; lỗi gửi email không làm mất thông báo trong ứng dụng.
+
 ## 2026-10-08
 
 ### D-03 Danh mục vật tư

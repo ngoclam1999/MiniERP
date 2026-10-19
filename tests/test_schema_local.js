@@ -332,6 +332,11 @@ const me = context.api({ action: 'auth.me', payload: {} });
 assert.equal(me.ok, true);
 assert.equal(me.data.role, 'admin');
 assert.equal(me.data.perms.settings, 'rw');
+const ownNotification = context.createNotification('test@example.com', 'Thông báo của tôi', 'Nội dung', '#projects');
+assert.ok(context.api({ action: 'notification.list', payload: {} }).data.some((row) => row.id === ownNotification.id));
+assert.equal(context.api({ action: 'notification.mark_read', payload: { id: notification.id } }).error.code, 'FORBIDDEN');
+assert.ok(context.api({ action: 'notification.mark_read', payload: { id: ownNotification.id } }).data.read_at);
+assert.equal(context.api({ action: 'notification.list', payload: {} }).data.some((row) => row.id === ownNotification.id), false);
 
 context.insert('CashAccounts', { acct_id: 'CASH-01', name: 'Tiền mặt', type: 'cash', opening_balance_vnd: 1000000 });
 const receipt = context.api({ action: 'ledger.entry_create', payload: { date: '2026-10-06', kind: 'in', acct_id: 'CASH-01', amount_vnd: 500000, description: 'Thu thử' } });
@@ -513,10 +518,21 @@ const po = context.api({ action: 'pr.to_po', payload: { pr_ids: [manualPr.data.p
 assert.equal(po.ok, true);
 assert.equal(po.data.status, 'draft');
 assert.equal(po.data.lines[0].pr_id, manualPr.data.pr_id);
+assert.equal(po.data.lines[0].eta_date, '2026-10-27');
+assert.equal(po.data.lines[0].eta_source, 'calculated');
 assert.equal(context.findById('PR', manualPr.data.pr_id).status, 'po_created');
 assert.equal(context.api({ action: 'po.confirm', payload: { po_id: po.data.po_id } }).error.code, 'INVALID_STATE');
 const editedPo = context.api({ action: 'po.update', payload: { po_id: po.data.po_id, patch: { lines: po.data.lines.map((line) => ({ ...line, unit_price_vnd: 2500000, lead_time_days: 12 })) } } });
 assert.equal(editedPo.data.total_vnd, 5000000);
+assert.equal(editedPo.data.lines[0].eta_date, '2026-10-18');
+assert.equal(context.api({ action: 'eta.update', payload: { line_id: po.data.lines[0].line_id, eta_date: '2026-11-20', note: '' } }).error.field, 'note');
+const manualEta = context.api({ action: 'eta.update', payload: { line_id: po.data.lines[0].line_id, eta_date: '2026-12-05', note: 'Nhà cung cấp dời lịch giao' } });
+assert.equal(manualEta.data.eta_source, 'manual');
+assert.equal(manualEta.data.eta_note, 'Nhà cung cấp dời lịch giao');
+const etaRow = context.api({ action: 'eta.list', payload: { project_id: project.data.project_id, today: '2026-10-17' } }).data.find((line) => line.line_id === po.data.lines[0].line_id);
+assert.equal(etaRow.eta_state, 'late');
+assert.equal(etaRow.late_days, 4);
+assert.ok(context.readAll('AuditLog').some((row) => row.action === 'eta.update' && row.entity_id === po.data.lines[0].line_id));
 assert.equal(context.api({ action: 'po.send', payload: { po_id: po.data.po_id } }).data.status, 'sent');
 assert.equal(context.api({ action: 'po.confirm', payload: { po_id: po.data.po_id } }).data.status, 'confirmed');
 const servoBom = context.readAll('BOM').find((row) => row.project_id === project.data.project_id && row.sku === 'SERVO-DEMO-001');
@@ -525,7 +541,7 @@ assert.equal(context.api({ action: 'po.send', payload: { po_id: po.data.po_id } 
 assert.equal(context.api({ action: 'po.cancel', payload: { po_id: po.data.po_id } }).data.status, 'cancelled');
 assert.equal(Number(context.findById('BOM', servoBom.bom_id).qty_ordered), 0);
 assert.equal(context.findById('PR', manualPr.data.pr_id).status, 'open');
-console.log('PASS local M-01/M-02 test: PR lifecycle, PO grouping/edit/state machine, BOM ordered and cancellation reversal');
+console.log('PASS local M-01/M-02/M-03 test: PR/PO lifecycle, calculated/manual ETA, audit history and BOM reversal');
 
 propertyValues.set('GEMINI_API_KEY', 'test-key');
 let aiFetchCount = 0;

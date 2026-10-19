@@ -37,7 +37,7 @@ var MINI_ERP_SCHEMA = {
 
   PR: ['pr_id', 'project_id', 'sku', 'qty', 'need_date', 'status', 'source'],
   PO: ['po_id', 'sup_id', 'order_date', 'payment_terms', 'currency', 'status', 'total_vnd'],
-  POLines: ['line_id', 'po_id', 'sku', 'project_id', 'pr_id', 'qty', 'unit_price_vnd', 'lead_time_days', 'eta_date', 'need_date', 'qty_received'],
+  POLines: ['line_id', 'po_id', 'sku', 'project_id', 'pr_id', 'qty', 'unit_price_vnd', 'lead_time_days', 'eta_date', 'eta_source', 'eta_note', 'need_date', 'qty_received'],
 
   Employees: ['emp_id', 'full_name', 'dob', 'gender', 'phone', 'address', 'dept', 'position', 'contract_type', 'contract_start', 'contract_end', 'insurance_no', 'bank_name', 'bank_account', 'emergency_name', 'emergency_phone', 'status'],
   EmployeeSensitive: ['emp_id', 'id_card_no', 'tax_code'],
