@@ -15,6 +15,46 @@
 - Thêm chuông thông báo, huy hiệu số lượng, danh sách điều hướng theo liên kết và tự làm mới mỗi 30 giây.
 - `createNotification` gửi thêm email khi `to_user` là địa chỉ email hợp lệ; lỗi gửi email không làm mất thông báo trong ứng dụng.
 
+### M-04 Công nợ PO và PDF
+
+- Khi xác nhận PO, tạo Payables idempotent cho hai mẫu điều khoản đã xác nhận: `Net N` và `Cọc X%, còn lại net N`.
+- Khi huỷ PO đã xác nhận, đảo các khoản phải trả chưa thanh toán; chặn huỷ nếu đã phát sinh thanh toán.
+- Thêm `po.export_pdf` và nút Xuất PDF, tạo chứng từ gồm nhà cung cấp, dòng vật tư, ETA và tổng tiền trên Google Drive.
+
+### M-05 Gantt ETA
+
+- Thêm tab Tiến độ ETA, biểu diễn khoảng đặt hàng đến ETA, mốc hôm nay và ngày cần trên cùng một trục thời gian.
+- Tô màu theo trạng thái trễ, sắp trễ, đúng tiến độ hoặc đã nhận; hỗ trợ tìm theo PO, SKU và dự án.
+
+### K-06 Nhập kho theo PO
+
+- Thêm `gr.scan` tìm vật tư bằng barcode/SKU và gợi ý các dòng PO còn số lượng chưa nhận.
+- Thêm `gr.post` hỗ trợ nhận từng phần, cập nhật trạng thái PO và tự chuyển BOM từ đã đặt sang giữ chỗ theo dự án.
+- Cho phép nhập kho chung khi không có PO và trả cảnh báo rõ ràng; toàn bộ dòng được kiểm tra trước khi bắt đầu ghi.
+
+### T-01 Công việc dự án
+
+- Thêm `task.list/create/update/move`, bắt buộc dự án, người phụ trách và hạn; cảnh báo nhưng không chặn khi hạn vượt hạn dự án.
+- Chặn chuyển sang Đang làm khi công việc phụ thuộc chưa hoàn thành; quản lý có thể ghi đè có chủ đích.
+- Áp dụng quyền `rw_own` cho kỹ sư và chặn công việc phụ thuộc chính nó.
+
+### C-03 Phiếu chi
+
+- Thêm `ledger.payment_create`; phiếu chi PO phân bổ vào công nợ chưa trả theo hạn gần nhất trước.
+- Chặn quỹ tiền mặt âm; tài khoản ngân hàng được phép âm nhưng trả cảnh báo.
+
+### T-02 Kanban công việc
+
+- Thêm màn hình Công việc với bốn cột Chờ gia công, Đang làm, Chờ kiểm tra và Hoàn thành.
+- Hỗ trợ kéo thả trên máy tính và nút chuyển trái/phải trên điện thoại.
+- Chuyển sang QC gửi thông báo cho người kiểm tra; chỉ người kiểm tra hoặc quản lý được hoàn tất, trả về Đang làm bắt buộc lý do.
+- Trả tiến độ dự án mới ngay sau mỗi lần chuyển trạng thái.
+
+### T-03 Lịch tháng
+
+- Thêm lịch tháng và bộ lọc dự án, tổng hợp năm nguồn: hạn công việc, ETA hàng về, đợt thanh toán, công tác đã duyệt và ngày bàn giao dự án.
+- Thêm màu phân biệt từng loại sự kiện và điều hướng tháng trước/sau.
+
 ## 2026-10-08
 
 ### D-03 Danh mục vật tư

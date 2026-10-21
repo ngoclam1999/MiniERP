@@ -6,6 +6,7 @@ function registerLedgerActions_() {
   registerActionOnce_('account.create', function (p) { requireRole(getAuthContext_(), ['accountant']); validateCashAccount_(p); return insert('CashAccounts', p); }, true);
   registerActionOnce_('ledger.list', function () { requireRole(getAuthContext_(), ['director','accountant']); return readAll('CashLedger'); }, false);
   registerActionOnce_('ledger.entry_create', function (p) { requireRole(getAuthContext_(), ['accountant']); return createLedgerEntry_(p); }, true);
+  registerActionOnce_('ledger.payment_create', function (p) { requireRole(getAuthContext_(), ['accountant']); return createPayment_(p); }, true);
   registerActionOnce_('ledger.reverse', function (p) { requireRole(getAuthContext_(), ['accountant']); return reverseLedgerEntry_(p.no, p.date, p.description); }, true);
 }
 
@@ -39,6 +40,21 @@ function createLedgerEntry_(p) {
   var inserted = insert('CashLedger', row);
   CacheService.getScriptCache().remove('mini_erp:balance:' + p.acct_id);
   return inserted;
+}
+
+function createPayment_(p) {
+  if (!p || !p.po_id) { var generic=copyDbObject_(p||{});generic.kind='out';return createLedgerEntry_(generic); }
+  var po = findById('PO', p.po_id);
+  if (!po) throw apiError('NOT_FOUND', 'Không tìm thấy PO: ' + p.po_id, 'po_id');
+  var amount = Number(p.amount_vnd), payables = query('Payables', function (x) {
+    return String(x.po_id) === String(p.po_id) && Number(x.paid_vnd || 0) < Number(x.amount_vnd || 0);
+  }).sort(function (a, b) { return String(a.due_date).localeCompare(String(b.due_date)); });
+  var outstanding = payables.reduce(function (sum, x) { return sum + Number(x.amount_vnd || 0) - Number(x.paid_vnd || 0); }, 0);
+  if (!(amount > 0) || amount > outstanding) throw apiError('VALIDATION', 'Số tiền chi vượt công nợ còn lại của PO.','amount_vnd');
+  var payload = copyDbObject_(p);payload.kind='out';payload.party_type='supplier';payload.party_id=po.sup_id;
+  var entry = createLedgerEntry_(payload), left = amount;
+  payables.forEach(function (x) { if (left <= 0) return;var due=Number(x.amount_vnd||0)-Number(x.paid_vnd||0),take=Math.min(left,due);update('Payables',x.ap_id,{paid_vnd:Number(x.paid_vnd||0)+take});left-=take; });
+  return { entry: entry, outstanding_vnd: outstanding - amount, warning: String((findById('CashAccounts',p.acct_id)||{}).type)==='bank'&&getAccountBalance_(p.acct_id).balance_vnd<0?'Tài khoản ngân hàng đang âm.':'' };
 }
 
 function reverseLedgerEntry_(no, date, description) {

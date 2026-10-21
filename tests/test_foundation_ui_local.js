@@ -14,7 +14,9 @@ const catalogHr = read('src/js_catalog_hr.html');
 const projects = read('src/js_projects.html');
 const stock = read('src/js_stock.html');
 const purchasing = read('src/js_purchasing.html');
+const tasks = read('src/js_tasks.html');
 const notifications = read('src/js_notifications.html');
+new Function(tasks.replace(/^<script>\s*/, '').replace(/\s*<\/script>\s*$/, ''));
 
 function check(condition, message) {
   if (!condition) throw new Error(message);
@@ -52,6 +54,7 @@ check(partners.includes('sequence!==requestSequence||requestKind!==currentKind')
 check(index.includes("include('src/js_stock')"), 'Index chưa include màn hình tồn kho.');
 check(index.includes("include('src/js_purchasing')"), 'Index chưa include màn hình mua hàng.');
 check(index.includes("include('src/js_notifications')"), 'Z-02 thiếu module giao diện thông báo.');
+check(index.includes("include('src/js_tasks')"), 'Index chưa include màn hình Công việc.');
 check(stock.includes("MiniERP.api.call('stock.list'"), 'Màn hình kho chưa tải tồn kho.');
 check(stock.includes("MiniERP.api.call('stock.card'"), 'Màn hình kho chưa có thẻ kho.');
 check(stock.includes("MiniERP.api.call('issue.create'"), 'K-05 thiếu form tạo phiếu xuất.');
@@ -60,6 +63,8 @@ check(stock.includes('href="#projects"'), 'Form phiếu xuất thiếu liên k�
 check(stock.includes("MiniERP.api.call('stocktake.create'"), 'K-07 thiếu tạo phiếu kiểm kê.');
 check(stock.includes("MiniERP.api.call('stocktake.save_counts'"), 'K-07 thiếu lưu số đếm.');
 check(stock.includes("MiniERP.api.call('stocktake.approve'"), 'K-07 thiếu duyệt điều chỉnh.');
+check(stock.includes("MiniERP.api.call('gr.scan'"), 'K-06 thiếu quét mã khi nhập kho.');
+check(stock.includes("MiniERP.api.call('gr.post'"), 'K-06 thiếu ghi nhận phiếu nhập kho.');
 check(purchasing.includes("MiniERP.api.call('pr.list'"), 'M-01 thiếu danh sách PR.');
 check(purchasing.includes("MiniERP.api.call('pr.create_manual'"), 'M-01 thiếu tạo PR thủ công.');
 check(purchasing.includes("MiniERP.api.call('pr.to_po'"), 'M-01 thiếu nút tạo PO.');
@@ -71,6 +76,18 @@ check(purchasing.includes("'po.cancel'"), 'M-02 thiếu huỷ PO.');
 check(purchasing.includes("MiniERP.api.call('eta.update'"), 'M-03 thiếu form sửa ETA.');
 check(purchasing.includes('data-edit-eta'), 'M-03 thiếu thao tác sửa ETA trên dòng PO.');
 check(purchasing.includes('Lần sửa được ghi vào AuditLog'), 'M-03 thiếu thông báo lịch sử ETA.');
+check(purchasing.includes("MiniERP.api.call('po.export_pdf'"), 'M-04 thiếu thao tác xuất PDF PO.');
+check(purchasing.includes('data-pdf-po'), 'M-04 thiếu nút xuất PDF trên danh sách PO.');
+check(purchasing.includes("MiniERP.api.call('eta.list'"), 'M-05 thiếu tải dữ liệu Gantt ETA.');
+check(purchasing.includes('etaGantt'), 'M-05 thiếu vùng hiển thị Gantt ETA.');
+check(css.includes('.eta-today') && css.includes('.eta-need'), 'M-05 thiếu mốc hôm nay hoặc ngày cần trên Gantt.');
+check(tasks.includes("MiniERP.api.call('task.list'"), 'T-02 thiếu tải danh sách công việc.');
+check(tasks.includes("MiniERP.api.call('task.move'"), 'T-02 thiếu thao tác chuyển cột Kanban.');
+check(tasks.includes('ondragstart') && tasks.includes('data-move'), 'T-02 thiếu kéo thả desktop hoặc nút chuyển trên điện thoại.');
+check(tasks.includes('taskReturnReason'), 'T-02 thiếu lý do khi trả QC về Đang làm.');
+check(tasks.includes("MiniERP.api.call('calendar.list'"), 'T-03 thiếu tải lịch tháng.');
+check(['task','eta','payment','trip','handover'].every((type) => tasks.includes(`data-tone="${type}"`)), 'T-03 thiếu một trong năm loại sự kiện.');
+check(css.includes('.kanban-board') && css.includes('.calendar-grid'), 'T-02/T-03 thiếu CSS Kanban hoặc lịch tháng.');
 check(notifications.includes("MiniERP.api.call('notification.list'"), 'Z-02 thiếu tải thông báo chưa đọc.');
 check(notifications.includes("MiniERP.api.call('notification.mark_read'"), 'Z-02 thiếu đánh dấu đã đọc.');
 check(notifications.includes('setInterval(loadNotifications,30000)'), 'Z-02 thiếu thăm dò 30 giây.');
@@ -88,5 +105,7 @@ console.log('PASS local F-10 UI test: admin settings form and read-only counters
 console.log('PASS local D-01/D-02 UI test: customer and supplier CRUD screens');
 console.log('PASS local K-03/reference UI test: stock screen and linked-record suggestions');
 console.log('PASS local K-05/K-07 UI test: project-aware issue form and stocktake workflow');
-console.log('PASS local M-01/M-02/M-03 UI test: PR/PO tabs, linked records and manual ETA editing');
+console.log('PASS local K-06 UI test: barcode scan, PO suggestion and goods receipt posting');
+console.log('PASS local M-01/M-02/M-03/M-04/M-05 UI test: PR/PO, ETA Gantt and PDF export controls');
+console.log('PASS local T-02/T-03 UI test: Kanban drag/arrows, QC return reason and five-source monthly calendar');
 console.log('PASS local Z-02 UI test: notification bell, unread badge, mark-read and 30-second polling');
