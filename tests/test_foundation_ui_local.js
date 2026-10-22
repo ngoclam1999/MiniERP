@@ -85,9 +85,11 @@ check(tasks.includes("MiniERP.api.call('task.list'"), 'T-02 thiếu tải danh s
 check(tasks.includes("MiniERP.api.call('task.move'"), 'T-02 thiếu thao tác chuyển cột Kanban.');
 check(tasks.includes('ondragstart') && tasks.includes('data-move'), 'T-02 thiếu kéo thả desktop hoặc nút chuyển trên điện thoại.');
 check(tasks.includes('taskReturnReason'), 'T-02 thiếu lý do khi trả QC về Đang làm.');
+check(tasks.includes('data-edit-task') && tasks.includes("'task.update'"), 'T-02 thiếu sửa công việc trên Kanban.');
 check(tasks.includes("MiniERP.api.call('calendar.list'"), 'T-03 thiếu tải lịch tháng.');
 check(['task','eta','payment','trip','handover'].every((type) => tasks.includes(`data-tone="${type}"`)), 'T-03 thiếu một trong năm loại sự kiện.');
 check(css.includes('.kanban-board') && css.includes('.calendar-grid'), 'T-02/T-03 thiếu CSS Kanban hoặc lịch tháng.');
+check(projects.includes('projectTaskTable') && projects.includes('Mở Kanban'), 'T-04 thiếu danh sách công việc trong chi tiết dự án.');
 check(notifications.includes("MiniERP.api.call('notification.list'"), 'Z-02 thiếu tải thông báo chưa đọc.');
 check(notifications.includes("MiniERP.api.call('notification.mark_read'"), 'Z-02 thiếu đánh dấu đã đọc.');
 check(notifications.includes('setInterval(loadNotifications,30000)'), 'Z-02 thiếu thăm dò 30 giây.');
@@ -108,4 +110,5 @@ console.log('PASS local K-05/K-07 UI test: project-aware issue form and stocktak
 console.log('PASS local K-06 UI test: barcode scan, PO suggestion and goods receipt posting');
 console.log('PASS local M-01/M-02/M-03/M-04/M-05 UI test: PR/PO, ETA Gantt and PDF export controls');
 console.log('PASS local T-02/T-03 UI test: Kanban drag/arrows, QC return reason and five-source monthly calendar');
+console.log('PASS local T-04 UI test: shared progress and project-to-Kanban task view');
 console.log('PASS local Z-02 UI test: notification bell, unread badge, mark-read and 30-second polling');

@@ -55,6 +55,12 @@
 - Thêm lịch tháng và bộ lọc dự án, tổng hợp năm nguồn: hạn công việc, ETA hàng về, đợt thanh toán, công tác đã duyệt và ngày bàn giao dự án.
 - Thêm màu phân biệt từng loại sự kiện và điều hướng tháng trước/sau.
 
+### T-04 Tiến độ dự án từ công việc
+
+- Chuẩn hóa `calculateProjectProgress_` làm nguồn tính duy nhất theo bốn trạng thái task: 0%, 50%, 90% và 100%.
+- Dùng cùng kết quả trong danh sách dự án, chi tiết dự án và phản hồi sau khi chuyển Kanban.
+- Hiển thị bảng công việc thật trong tab Công việc của dự án, có liên kết mở Kanban; bổ sung sửa công việc trực tiếp trên thẻ Kanban.
+
 ## 2026-10-08
 
 ### D-03 Danh mục vật tư

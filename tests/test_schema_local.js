@@ -480,6 +480,8 @@ const calendarEvents = context.api({ action: 'calendar.list', payload: { month: 
 assert.equal(calendarEvents.ok, true);
 assert.deepEqual(new Set(calendarEvents.data.map((row) => row.type)), new Set(['task','eta','payment','trip','handover']));
 assert.equal(context.api({ action: 'calendar.list', payload: { month: '12/2026' } }).error.field, 'month');
+assert.equal(context.calculateProjectProgress_([{ status: 'wait' }, { status: 'doing' }, { status: 'qc' }, { status: 'done' }]), 60);
+assert.equal(context.calculateProjectProgress_([]), 0);
 console.log('PASS local T-01/T-02/T-03 test: task rules, QC workflow, progress and five-source monthly calendar');
 
 const bomAdd = context.api({ action: 'bom.add_line', payload: { project_id: project.data.project_id, sku: 'PLC-DEMO-001', qty_required: 5, need_date: '2026-11-15', note: 'Dòng thử' } });
